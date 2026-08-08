@@ -8,12 +8,20 @@
     "scheme": "wstatussaver",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0E1513"
+    },
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "package": "com.wstatussaver.app",
-      "icon": "./assets/images/icon.png"
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#0E1513"
+      }
     },
     "web": {
       "bundler": "metro",
@@ -28,7 +36,7 @@
         "expo-build-properties",
         {
           "android": {
-            "minSdkVersion": 24
+            "minSdkVersion": 23
           }
         }
       ]

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Download, Heart, Check } from 'lucide-react-native';
+import { Download, Heart, Check, FolderSearch } from 'lucide-react-native';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { AppBar } from '@/components/ui/AppBar';
 import { Card } from '@/components/ui/Card';
@@ -20,55 +20,72 @@ export default function ImagesScreen() {
 
   return (
     <ScreenContainer scrollable padded={false}>
-      <AppBar title="Image Statuses" subtitle={`${imageStatuses.length} photo statuses available`} />
+      <AppBar
+        title="Image Statuses"
+        subtitle={`${imageStatuses.length} photo statuses available`}
+        centerTitle
+      />
 
       <View style={styles.body}>
-        <View style={styles.grid}>
-          {imageStatuses.map((item) => (
-            <Card key={item.id} padding="0" style={styles.gridCard}>
-              <Pressable
-                onPress={() => setSelectedStatus(item)}
-                style={styles.imageWrapper}
-              >
-                <Image source={{ uri: item.uri }} style={styles.thumbnail} />
+        {imageStatuses.length === 0 ? (
+          <Card style={styles.emptyCard}>
+            <FolderSearch size={44} color="#3DDC84" />
+            <Text style={styles.emptyTitle}>No Photo Statuses</Text>
+            <Text style={styles.emptySubtitle}>
+              View photo statuses in WhatsApp first, then tap Refresh.
+            </Text>
+          </Card>
+        ) : (
+          <View style={styles.grid}>
+            {imageStatuses.map((item) => (
+              <Card key={item.id} padding="0" style={styles.gridCard}>
                 <Pressable
-                  onPress={() => toggleFavorite(item.id)}
-                  style={styles.favButton}
+                  onPress={() => setSelectedStatus(item)}
+                  style={styles.imageWrapper}
                 >
-                  <Heart
-                    size={16}
-                    color={item.isFavorite ? colors.destructive : '#FFFFFF'}
-                    fill={item.isFavorite ? colors.destructive : 'rgba(0,0,0,0.3)'}
-                  />
+                  <Image source={{ uri: item.uri }} style={styles.thumbnail} />
+                  <Pressable
+                    onPress={() => toggleFavorite(item.id)}
+                    style={styles.favButton}
+                  >
+                    <Heart
+                      size={16}
+                      color={item.isFavorite ? colors.destructive : '#FFFFFF'}
+                      fill={item.isFavorite ? colors.destructive : 'rgba(0,0,0,0.3)'}
+                    />
+                  </Pressable>
                 </Pressable>
-              </Pressable>
 
-              <View style={styles.cardInfo}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[typography.labelMedium, { color: colors.foreground }]} numberOfLines={1}>
-                    {item.sender}
-                  </Text>
-                  <Text style={[typography.caption, { color: colors.mutedForeground }]}>
-                    {item.time}
-                  </Text>
+                <View style={styles.cardInfo}>
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={[typography.labelMedium, { color: colors.foreground }]}
+                      numberOfLines={1}
+                    >
+                      {item.sender}
+                    </Text>
+                    <Text style={[typography.caption, { color: colors.mutedForeground }]}>
+                      {item.time}
+                    </Text>
+                  </View>
+
+                  <IconButton
+                    label="Save"
+                    onPress={() => toggleSave(item.id)}
+                    active={item.isSaved}
+                    size={34}
+                  >
+                    {item.isSaved ? (
+                      <Check size={16} color={colors.primaryForeground} />
+                    ) : (
+                      <Download size={16} color={colors.foreground} />
+                    )}
+                  </IconButton>
                 </View>
-
-                <IconButton
-                  label="Save"
-                  onPress={() => toggleSave(item.id)}
-                  active={item.isSaved}
-                  size={34}
-                >
-                  {item.isSaved ? (
-                    <Check size={16} color={colors.primaryForeground} />
-                  ) : (
-                    <Download size={16} color={colors.foreground} />
-                  )}
-                </IconButton>
-              </View>
-            </Card>
-          ))}
-        </View>
+              </Card>
+            ))}
+          </View>
+        )}
       </View>
 
       <StatusViewerModal
@@ -86,6 +103,23 @@ const styles = StyleSheet.create({
   body: {
     paddingHorizontal: spacing[4],
     paddingTop: spacing[4],
+  },
+  emptyCard: {
+    padding: spacing[8],
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing[2],
+  },
+  emptyTitle: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '700',
+    marginTop: 4,
+  },
+  emptySubtitle: {
+    color: '#8D9F96',
+    fontSize: 14,
+    textAlign: 'center',
   },
   grid: {
     flexDirection: 'row',

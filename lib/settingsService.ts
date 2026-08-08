@@ -8,6 +8,7 @@ export interface AppSettings {
   statusAlerts: boolean;
   folderAccessGranted: boolean;
   folderPath: string;
+  safUri: string;
   onboardingCompleted: boolean;
 }
 
@@ -19,6 +20,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   statusAlerts: false,
   folderAccessGranted: false,
   folderPath: 'PrimaryStorage/Android/media/com.whatsapp/WhatsApp/Media/.Statuses',
+  safUri: '',
   onboardingCompleted: false,
 };
 

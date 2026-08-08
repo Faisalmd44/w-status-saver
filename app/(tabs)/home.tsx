@@ -13,6 +13,7 @@ import {
   Search,
   Settings,
   X,
+  FolderSearch,
 } from 'lucide-react-native';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { AppBar } from '@/components/ui/AppBar';
@@ -27,7 +28,8 @@ import { StatusMetadataItem } from '@/lib/statusService';
 export default function HomeScreen() {
   const { colors } = useTheme();
   const router = useRouter();
-  const { statuses, toggleSave, toggleFavorite, saveAll, refresh } = useStatuses();
+  const { statuses, savedStatuses, toggleSave, toggleFavorite, saveAll, refresh } =
+    useStatuses();
   const [activeFilter, setActiveFilter] = useState<'all' | 'image' | 'video'>('all');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -51,8 +53,12 @@ export default function HomeScreen() {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     await refresh();
-    setTimeout(() => setIsRefreshing(false), 500);
+    setTimeout(() => setIsRefreshing(false), 300);
   };
+
+  const imageCount = statuses.filter((s) => s.type === 'image').length;
+  const videoCount = statuses.filter((s) => s.type === 'video').length;
+  const savedCount = savedStatuses.length;
 
   return (
     <ScreenContainer
@@ -74,7 +80,11 @@ export default function HomeScreen() {
         actions={
           <View style={styles.appBarActions}>
             <IconButton label="Re-scan" onPress={handleRefresh}>
-              <RefreshCw size={18} color={colors.foreground} style={isRefreshing ? styles.spin : undefined} />
+              <RefreshCw
+                size={18}
+                color={colors.foreground}
+                style={isRefreshing ? styles.spin : undefined}
+              />
             </IconButton>
 
             <IconButton label="Search" onPress={() => setShowSearch((prev) => !prev)}>
@@ -91,12 +101,17 @@ export default function HomeScreen() {
       <View style={styles.body}>
         {/* Search Bar Overlay */}
         {showSearch ? (
-          <View style={[styles.searchBarContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View
+            style={[
+              styles.searchBarContainer,
+              { backgroundColor: colors.surface, borderColor: colors.border },
+            ]}
+          >
             <Search size={18} color={colors.mutedForeground} />
             <TextInput
               value={searchQuery}
               onChangeText={setSearchQuery}
-              placeholder="Search statuses by contact name..."
+              placeholder="Search statuses..."
               placeholderTextColor={colors.mutedForeground}
               style={[styles.searchInput, { color: colors.foreground }]}
               autoFocus
@@ -108,18 +123,19 @@ export default function HomeScreen() {
             ) : null}
           </View>
         ) : null}
+
         {/* Hero Card */}
         <Card style={styles.heroCard} shadow="glow">
           <View style={styles.heroHeader}>
             <View style={styles.heroBadge}>
               <Sparkles size={14} color={colors.primary} />
               <Text style={[typography.caption, { color: colors.primary, fontWeight: '700' }]}>
-                PRO STATUS SAVER
+                STATUS SAVER
               </Text>
             </View>
             <View style={styles.shieldBadge}>
               <ShieldCheck size={14} color={colors.primary} />
-              <Text style={[typography.caption, { color: colors.primary }]}>Auto Detected</Text>
+              <Text style={[typography.caption, { color: colors.primary }]}>SAF Access</Text>
             </View>
           </View>
 
@@ -127,55 +143,63 @@ export default function HomeScreen() {
             {statuses.length} New Statuses Ready
           </Text>
           <Text style={[typography.bodySmall, { color: colors.mutedForeground, marginTop: spacing[1] }]}>
-            Photos & videos auto-scanned from WhatsApp & Business.
+            Photos & videos scanned from WhatsApp & Business.
           </Text>
 
           <View style={styles.heroStatsRow}>
             <View style={styles.statBox}>
               <Text style={[typography.headingMedium, { color: colors.primary }]}>
-                {statuses.filter((s) => s.type === 'image').length}
+                {imageCount}
               </Text>
               <Text style={[typography.caption, { color: colors.mutedForeground }]}>Photos</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statBox}>
               <Text style={[typography.headingMedium, { color: colors.primary }]}>
-                {statuses.filter((s) => s.type === 'video').length}
+                {videoCount}
               </Text>
               <Text style={[typography.caption, { color: colors.mutedForeground }]}>Videos</Text>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statBox}>
               <Text style={[typography.headingMedium, { color: colors.primary }]}>
-                {statuses.filter((s) => s.isSaved).length}
+                {savedCount}
               </Text>
               <Text style={[typography.caption, { color: colors.mutedForeground }]}>Saved</Text>
             </View>
           </View>
 
-          <Pressable
-            onPress={saveAll}
-            style={({ pressed }) => [
-              styles.saveAllBtn,
-              {
-                backgroundColor: colors.primary,
-                transform: [{ scale: pressed ? 0.98 : 1 }],
-              },
-            ]}
-          >
-            <FolderDown size={18} color={colors.primaryForeground} strokeWidth={2.2} />
-            <Text style={[typography.labelMedium, styles.saveAllBtnText, { color: colors.primaryForeground }]}>
-              Save All Statuses
-            </Text>
-          </Pressable>
+          {statuses.length > 0 ? (
+            <Pressable
+              onPress={saveAll}
+              style={({ pressed }) => [
+                styles.saveAllBtn,
+                {
+                  backgroundColor: colors.primary,
+                  transform: [{ scale: pressed ? 0.98 : 1 }],
+                },
+              ]}
+            >
+              <FolderDown size={18} color={colors.primaryForeground} strokeWidth={2.2} />
+              <Text
+                style={[
+                  typography.labelMedium,
+                  styles.saveAllBtnText,
+                  { color: colors.primaryForeground },
+                ]}
+              >
+                Save All Statuses
+              </Text>
+            </Pressable>
+          ) : null}
         </Card>
 
         {/* Category Filter Tabs */}
         <View style={styles.filterRow}>
           {[
             { id: 'all', label: `All (${statuses.length})` },
-            { id: 'image', label: `Photos (${statuses.filter((s) => s.type === 'image').length})` },
-            { id: 'video', label: `Videos (${statuses.filter((s) => s.type === 'video').length})` },
+            { id: 'image', label: `Photos (${imageCount})` },
+            { id: 'video', label: `Videos (${videoCount})` },
           ].map((tab) => {
             const isActive = activeFilter === tab.id;
             return (
@@ -206,75 +230,100 @@ export default function HomeScreen() {
         {/* Section Header */}
         <View style={styles.sectionHeader}>
           <Text style={[typography.headingSmall, { color: colors.foreground }]}>Recent Media</Text>
-          <Text style={[typography.caption, { color: colors.mutedForeground }]}>Tap to preview</Text>
+          <Text style={[typography.caption, { color: colors.mutedForeground }]}>
+            {statuses.length > 0 ? 'Tap to preview' : 'No media'}
+          </Text>
         </View>
 
-        {/* Status Grid */}
-        <View style={styles.grid}>
-          {filteredStatuses.map((item) => (
-            <Card key={item.id} padding="0" style={styles.gridCard}>
-              <Pressable
-                onPress={() => setSelectedStatus(item)}
-                style={styles.imageWrapper}
-              >
-                <Image source={{ uri: item.uri }} style={styles.thumbnail} />
-
-                {item.type === 'video' ? (
-                  <View style={styles.videoOverlay}>
-                    <View style={styles.playCircle}>
-                      <Play size={16} color="#FFFFFF" fill="#FFFFFF" />
-                    </View>
-                    {item.duration ? (
-                      <View style={styles.durationBadge}>
-                        <Text style={styles.durationText}>{item.duration}</Text>
-                      </View>
-                    ) : null}
-                  </View>
-                ) : null}
-
+        {/* Empty State or Status Grid */}
+        {filteredStatuses.length === 0 ? (
+          <Card style={styles.emptyCard}>
+            <FolderSearch size={44} color="#3DDC84" />
+            <Text style={styles.emptyTitle}>No new statuses</Text>
+            <Text style={styles.emptySubtitle}>
+              View WhatsApp statuses first, then tap Refresh.
+            </Text>
+            <Pressable
+              onPress={handleRefresh}
+              style={({ pressed }) => [
+                styles.refreshBtn,
+                { opacity: pressed ? 0.8 : 1 },
+              ]}
+            >
+              <RefreshCw size={16} color="#0A140F" />
+              <Text style={styles.refreshBtnText}>Refresh Statuses</Text>
+            </Pressable>
+          </Card>
+        ) : (
+          <View style={styles.grid}>
+            {filteredStatuses.map((item) => (
+              <Card key={item.id} padding="0" style={styles.gridCard}>
                 <Pressable
-                  onPress={() => toggleFavorite(item.id)}
-                  style={styles.favButton}
+                  onPress={() => setSelectedStatus(item)}
+                  style={styles.imageWrapper}
                 >
-                  <Heart
-                    size={16}
-                    color={item.isFavorite ? colors.destructive : '#FFFFFF'}
-                    fill={item.isFavorite ? colors.destructive : 'rgba(0,0,0,0.3)'}
-                  />
-                </Pressable>
-              </Pressable>
+                  <Image source={{ uri: item.uri }} style={styles.thumbnail} />
 
-              <View style={styles.cardInfo}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[typography.labelMedium, { color: colors.foreground }]} numberOfLines={1}>
-                    {item.sender}
-                  </Text>
-                  <Text style={[typography.caption, { color: colors.mutedForeground }]}>
-                    {item.time}
-                  </Text>
-                </View>
+                  {item.type === 'video' ? (
+                    <View style={styles.videoOverlay}>
+                      <View style={styles.playCircle}>
+                        <Play size={16} color="#FFFFFF" fill="#FFFFFF" />
+                      </View>
+                      {item.duration ? (
+                        <View style={styles.durationBadge}>
+                          <Text style={styles.durationText}>{item.duration}</Text>
+                        </View>
+                      ) : null}
+                    </View>
+                  ) : null}
 
-                <View style={styles.cardActions}>
-                  <IconButton
-                    label="Save"
-                    onPress={() => toggleSave(item.id)}
-                    active={item.isSaved}
-                    size={34}
+                  <Pressable
+                    onPress={() => toggleFavorite(item.id)}
+                    style={styles.favButton}
                   >
-                    {item.isSaved ? (
-                      <Check size={16} color={colors.primaryForeground} />
-                    ) : (
-                      <Download size={16} color={colors.foreground} />
-                    )}
-                  </IconButton>
+                    <Heart
+                      size={16}
+                      color={item.isFavorite ? colors.destructive : '#FFFFFF'}
+                      fill={item.isFavorite ? colors.destructive : 'rgba(0,0,0,0.3)'}
+                    />
+                  </Pressable>
+                </Pressable>
+
+                <View style={styles.cardInfo}>
+                  <View style={{ flex: 1 }}>
+                    <Text
+                      style={[typography.labelMedium, { color: colors.foreground }]}
+                      numberOfLines={1}
+                    >
+                      {item.sender}
+                    </Text>
+                    <Text style={[typography.caption, { color: colors.mutedForeground }]}>
+                      {item.time}
+                    </Text>
+                  </View>
+
+                  <View style={styles.cardActions}>
+                    <IconButton
+                      label="Save"
+                      onPress={() => toggleSave(item.id)}
+                      active={item.isSaved}
+                      size={34}
+                    >
+                      {item.isSaved ? (
+                        <Check size={16} color={colors.primaryForeground} />
+                      ) : (
+                        <Download size={16} color={colors.foreground} />
+                      )}
+                    </IconButton>
+                  </View>
                 </View>
-              </View>
-            </Card>
-          ))}
-        </View>
+              </Card>
+            ))}
+          </View>
+        )}
       </View>
 
-      {/* FULL-SCREEN STATUS VIEWER WITH SHARED ELEMENT ANIMATION */}
+      {/* FULL-SCREEN STATUS VIEWER */}
       <StatusViewerModal
         status={selectedStatus}
         visible={!!selectedStatus}
@@ -346,11 +395,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.full,
     marginTop: spacing[4],
     width: '100%',
-    shadowColor: '#25D366',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    elevation: 6,
   },
   saveAllBtnText: {
     fontWeight: '700',
@@ -379,6 +423,38 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginTop: spacing[1],
+  },
+  emptyCard: {
+    padding: spacing[8],
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing[2],
+  },
+  emptyTitle: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '700',
+    marginTop: 4,
+  },
+  emptySubtitle: {
+    color: '#8D9F96',
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  refreshBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: '#3DDC84',
+  },
+  refreshBtnText: {
+    color: '#0A140F',
+    fontWeight: '700',
+    fontSize: 14,
   },
   grid: {
     flexDirection: 'row',

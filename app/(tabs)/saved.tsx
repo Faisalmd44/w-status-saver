@@ -13,35 +13,55 @@ import { StatusMetadataItem } from '@/lib/statusService';
 
 export default function SavedScreen() {
   const { colors } = useTheme();
-  const { statuses, toggleSave, toggleFavorite } = useStatuses();
+  const { statuses, savedStatuses, confirmAndDeleteSaved, toggleSave, toggleFavorite } =
+    useStatuses();
   const [selectedStatus, setSelectedStatus] = useState<StatusMetadataItem | null>(null);
 
-  const savedItems = statuses.filter((item) => item.isSaved);
+  // Combine saved items from active scan + stored saved records
+  const savedMap = new Map<string, StatusMetadataItem>();
+  savedStatuses.forEach((item) => savedMap.set(item.id, item));
+  statuses.filter((s) => s.isSaved).forEach((item) => savedMap.set(item.id, item));
+
+  const savedList = Array.from(savedMap.values());
 
   return (
     <ScreenContainer scrollable padded={false}>
-      <AppBar title="Saved Gallery" subtitle={`${savedItems.length} downloaded media files`} />
+      <AppBar
+        title="Saved Gallery"
+        subtitle={`${savedList.length} downloaded media files`}
+        centerTitle
+      />
 
       <View style={styles.body}>
-        {savedItems.length === 0 ? (
+        {savedList.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Download size={48} color={colors.mutedForeground} />
-            <Text style={[typography.headingMedium, { color: colors.foreground, marginTop: spacing[3] }]}>
+            <Text
+              style={[
+                typography.headingMedium,
+                { color: colors.foreground, marginTop: spacing[3] },
+              ]}
+            >
               No Saved Media
             </Text>
-            <Text style={[typography.bodyMedium, { color: colors.mutedForeground, textAlign: 'center', marginTop: spacing[1] }]}>
-              Statuses you save from Home, Images or Videos tabs will appear in your device gallery.
+            <Text
+              style={[
+                typography.bodyMedium,
+                { color: colors.mutedForeground, textAlign: 'center', marginTop: spacing[1] },
+              ]}
+            >
+              Statuses you save from Home, Images or Videos tabs will appear here and in your gallery.
             </Text>
           </View>
         ) : (
           <View style={styles.grid}>
-            {savedItems.map((item) => (
+            {savedList.map((item) => (
               <Card key={item.id} padding="0" style={styles.gridCard}>
                 <Pressable
                   onPress={() => setSelectedStatus(item)}
                   style={styles.imageWrapper}
                 >
-                  <Image source={{ uri: item.uri }} style={styles.thumbnail} />
+                  <Image source={{ uri: item.savedUri || item.uri }} style={styles.thumbnail} />
 
                   {item.type === 'video' ? (
                     <View style={styles.videoOverlay}>
@@ -70,7 +90,10 @@ export default function SavedScreen() {
 
                 <View style={styles.cardInfo}>
                   <View style={{ flex: 1 }}>
-                    <Text style={[typography.labelMedium, { color: colors.foreground }]} numberOfLines={1}>
+                    <Text
+                      style={[typography.labelMedium, { color: colors.foreground }]}
+                      numberOfLines={1}
+                    >
                       {item.sender}
                     </Text>
                     <Text style={[typography.caption, { color: colors.mutedForeground }]}>
@@ -80,7 +103,7 @@ export default function SavedScreen() {
 
                   <IconButton
                     label="Delete"
-                    onPress={() => toggleSave(item.id)}
+                    onPress={() => confirmAndDeleteSaved(item)}
                     size={34}
                   >
                     <Trash2 size={16} color={colors.destructive} />

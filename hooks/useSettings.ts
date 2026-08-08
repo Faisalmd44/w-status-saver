@@ -2,14 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { AppSettings, DEFAULT_SETTINGS, loadSettings, saveSettings } from '@/lib/settingsService';
 
 export function useSettings() {
-  const [settings, setSettingsState] = useState<AppSettings>(DEFAULT_SETTINGS);
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  useEffect(() => {
-    const loaded = loadSettings();
-    setSettingsState(loaded);
-    setIsLoaded(true);
-  }, []);
+  const [settings, setSettingsState] = useState<AppSettings>(() => loadSettings());
+  const [isLoaded, setIsLoaded] = useState(true);
 
   const updateSetting = useCallback(<K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
     setSettingsState((prev) => {

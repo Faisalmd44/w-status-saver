@@ -1,5 +1,6 @@
-import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
+import * as FileSystem from 'expo-file-system';
 import { Folder, EyeOff, HardDrive, Check } from 'lucide-react-native';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { Logo } from '@/components/branding/Logo';
@@ -9,7 +10,29 @@ import { loadSettings, saveSettings } from '@/lib/settingsService';
 export default function FolderAccessScreen() {
   const router = useRouter();
 
-  const handleAllowAccess = () => {
+  const handleAllowAccess = async () => {
+    const StorageAccessFramework = (FileSystem as any).StorageAccessFramework;
+
+    if (Platform.OS === 'android' && StorageAccessFramework) {
+      try {
+        const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
+        if (permissions.granted && permissions.directoryUri) {
+          const curr = loadSettings();
+          saveSettings({
+            ...curr,
+            folderAccessGranted: true,
+            safUri: permissions.directoryUri,
+            onboardingCompleted: true,
+          });
+          router.replace('/home');
+          return;
+        }
+      } catch (err) {
+        console.warn('SAF folder selection failed or cancelled:', err);
+      }
+    }
+
+    // Fallback if SAF dialog is cancelled or running in web preview
     Alert.alert(
       'Storage Access Framework',
       'Select your WhatsApp Statuses directory in Android File Picker to grant permission:\n\nAndroid/media/com.whatsapp/WhatsApp/Media/.Statuses',
@@ -21,18 +44,10 @@ export default function FolderAccessScreen() {
             saveSettings({
               ...curr,
               folderAccessGranted: true,
+              safUri: 'content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fmedia%2Fcom.whatsapp%2FWhatsApp%2FMedia%2F.Statuses',
               onboardingCompleted: true,
             });
-            Alert.alert(
-              'Permission Verified',
-              'WhatsApp status folder access has been granted.',
-              [
-                {
-                  text: 'Continue',
-                  onPress: () => router.replace('/home'),
-                },
-              ]
-            );
+            router.replace('/home');
           },
         },
         { text: 'Cancel', style: 'cancel' },

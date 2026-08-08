@@ -12,9 +12,10 @@ interface AppBarProps {
   back?: boolean;
   actions?: ReactNode;
   brand?: boolean;
+  centerTitle?: boolean;
 }
 
-export function AppBar({ title, subtitle, back, actions, brand }: AppBarProps) {
+export function AppBar({ title, subtitle, back, actions, brand, centerTitle }: AppBarProps) {
   const { colors } = useTheme();
   const router = useRouter();
 
@@ -55,16 +56,29 @@ export function AppBar({ title, subtitle, back, actions, brand }: AppBarProps) {
           </View>
         </View>
       ) : (
-        <View style={styles.titleContainer}>
+        <View
+          style={[
+            styles.titleContainer,
+            centerTitle && styles.titleContainerCentered,
+          ]}
+        >
           <Text
-            style={[typography.headingSmall, { color: colors.foreground }]}
+            style={[
+              typography.headingSmall,
+              { color: colors.foreground },
+              centerTitle && styles.textCentered,
+            ]}
             numberOfLines={1}
           >
             {title}
           </Text>
           {subtitle ? (
             <Text
-              style={[typography.caption, { color: colors.mutedForeground }]}
+              style={[
+                typography.caption,
+                { color: colors.mutedForeground },
+                centerTitle && styles.textCentered,
+              ]}
               numberOfLines={1}
             >
               {subtitle}
@@ -73,7 +87,7 @@ export function AppBar({ title, subtitle, back, actions, brand }: AppBarProps) {
         </View>
       )}
 
-      <View style={styles.actions}>{actions}</View>
+      {actions ? <View style={styles.actions}>{actions}</View> : null}
     </View>
   );
 }
@@ -108,10 +122,16 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 0,
   },
+  titleContainerCentered: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  textCentered: {
+    textAlign: 'center',
+  },
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing[1.5],
   },
 });
-

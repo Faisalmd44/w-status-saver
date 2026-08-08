@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   Alert,
   Modal,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -9,6 +10,7 @@ import {
   Text,
   View,
 } from 'react-native';
+import * as FileSystem from 'expo-file-system';
 import { useRouter } from 'expo-router';
 import {
   ChevronLeft,
@@ -74,7 +76,24 @@ export default function SettingsScreen() {
     'SD Card / Statuses',
   ];
 
-  const handleGrantFolderAccess = () => {
+  const handleGrantFolderAccess = async () => {
+    const StorageAccessFramework = (FileSystem as any).StorageAccessFramework;
+    if (Platform.OS === 'android' && StorageAccessFramework) {
+      try {
+        const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
+        if (permissions.granted && permissions.directoryUri) {
+          updateSetting('safUri', permissions.directoryUri);
+          updateSetting('folderAccessGranted', true);
+          setActiveModal(null);
+          Alert.alert('Access Granted', 'WhatsApp Status folder permission is verified.');
+          refresh();
+          return;
+        }
+      } catch (err) {
+        console.warn('SAF permission request error:', err);
+      }
+    }
+
     Alert.alert(
       'Storage Access Framework',
       'Select your WhatsApp Statuses directory in Android File Picker to grant permission:\n\nAndroid/media/com.whatsapp/WhatsApp/Media/.Statuses',
@@ -85,6 +104,7 @@ export default function SettingsScreen() {
             updateSetting('folderAccessGranted', true);
             setActiveModal(null);
             Alert.alert('Access Granted', 'WhatsApp Status folder permission is verified.');
+            refresh();
           },
         },
         { text: 'Cancel', style: 'cancel' },
