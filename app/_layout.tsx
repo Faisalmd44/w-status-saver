@@ -53,8 +53,6 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ThemeProvider>
         <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="splash" options={{ headerShown: false }} />
-          <Stack.Screen name="onboarding" options={{ headerShown: false }} />
           <Stack.Screen name="folder-access" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="settings" options={{ headerShown: false }} />

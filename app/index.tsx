@@ -8,9 +8,8 @@ export default function Index() {
 
   useEffect(() => {
     const settings = loadSettings();
-    if (!settings.onboardingCompleted) {
-      setTargetRoute('/splash');
-    } else if (!settings.folderAccessGranted) {
+
+    if (!settings.folderAccessGranted) {
       setTargetRoute('/folder-access');
     } else {
       setTargetRoute('/home');
@@ -19,7 +18,14 @@ export default function Index() {
 
   if (!targetRoute) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#000000', justifyContent: 'center', alignItems: 'center' }}>
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: '#000000',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
         <ActivityIndicator color="#3DDC84" size="large" />
       </View>
     );
