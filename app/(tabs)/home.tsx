@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Image, Pressable, RefreshControl, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   Download,
@@ -55,12 +55,28 @@ export default function HomeScreen() {
   };
 
   return (
-    <ScreenContainer scrollable padded={false}>
+    <ScreenContainer
+      scrollable
+      padded={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={isRefreshing}
+          onRefresh={handleRefresh}
+          colors={[colors.primary]}
+          tintColor={colors.primary}
+          progressBackgroundColor={colors.surface}
+        />
+      }
+    >
       <AppBar
         brand
         subtitle={`${statuses.length} new statuses today`}
         actions={
           <View style={styles.appBarActions}>
+            <IconButton label="Re-scan" onPress={handleRefresh}>
+              <RefreshCw size={18} color={colors.foreground} style={isRefreshing ? styles.spin : undefined} />
+            </IconButton>
+
             <IconButton label="Search" onPress={() => setShowSearch((prev) => !prev)}>
               <Search size={18} color={colors.foreground} />
             </IconButton>

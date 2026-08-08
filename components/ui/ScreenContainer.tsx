@@ -1,14 +1,15 @@
-import { ScrollView, StyleSheet, View, type ViewStyle } from 'react-native';
+import { ScrollView, StyleSheet, View, type ViewStyle, type RefreshControlProps } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeProvider';
 import { spacing } from '@/theme';
-import type { ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 
 interface ScreenContainerProps {
   children: ReactNode;
   style?: ViewStyle;
   padded?: boolean;
   scrollable?: boolean;
+  refreshControl?: ReactElement<RefreshControlProps>;
 }
 
 export function ScreenContainer({
@@ -16,6 +17,7 @@ export function ScreenContainer({
   style,
   padded = true,
   scrollable = false,
+  refreshControl,
 }: ScreenContainerProps) {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -33,6 +35,7 @@ export function ScreenContainer({
         style={[styles.base, { backgroundColor: colors.background }]}
         contentContainerStyle={[containerStyle, style]}
         showsVerticalScrollIndicator={false}
+        refreshControl={refreshControl}
       >
         {children}
       </ScrollView>
