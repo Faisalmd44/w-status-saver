@@ -13,10 +13,7 @@
     },
     "android": {
       "package": "com.wstatussaver.app",
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#0E1513"
-      }
+      "icon": "./assets/images/icon.png"
     },
     "web": {
       "bundler": "metro",
