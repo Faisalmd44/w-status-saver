@@ -33,4 +33,3 @@ export default function Index() {
 
   return <Redirect href={targetRoute as any} />;
 }
-EOF
