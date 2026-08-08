@@ -1,11 +1,132 @@
-<div align="center">
+# Status Sanctuary
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+Import this repository https://github.com/conduciveadvertise/W-Status-Saver.git
 
-  <h1>Built with AI Studio</h2>
+Redesign the existing React Native Expo app.
 
-  <p>The fastest path from prompt to production with Gemini.</p>
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
 
-</div>
+Do NOT recreate the project.
+
+
+
+Do NOT change the project structure.
+
+
+
+Do NOT change navigation.
+
+
+
+Do NOT add backend or functionality.
+
+
+
+Only redesign and polish the UI.
+
+
+
+Use the uploaded W Status Saver logo as the app branding.
+
+
+
+Transform every screen into a world-class premium Android interface.
+
+
+
+Requirements:
+
+
+
+- WhatsApp-inspired green theme (original, not copied)
+
+- Material 3 design
+
+- Luxury premium look
+
+- Beautiful typography
+
+- Perfect spacing
+
+- Rounded cards (24dp)
+
+- Soft shadows
+
+- Glassmorphism where appropriate
+
+- Modern icons
+
+- Smooth animations
+
+- Premium bottom navigation
+
+- Premium app bar
+
+- Premium status cards
+
+- Consistent design system
+
+- Reusable UI components
+
+- Responsive for all Android screen sizes
+
+
+
+Redesign these existing screens only:
+
+- Home
+
+- Images
+
+- Videos
+
+- Saved
+
+- Favorites
+
+- Settings
+
+- Image Viewer
+
+- Video Player
+
+- Permission Screen
+
+
+
+Improve every component until the UI looks better than any Status Saver app on Google Play.
+
+
+
+After redesigning:
+
+- Run the build.
+
+- Fix all UI issues.
+
+- Do NOT commit.
+
+- Do NOT push.
+
+This project was built with [Lovable](https://lovable.dev).
+
+**Live app**: https://luxe-save.lovable.app
+
+## Build with Lovable
+
+Continue developing this project in the [Lovable editor](https://lovable.dev/projects/f033995f-2240-470b-9acc-2ae16cac7d6c).
+
+- **Ship faster**: describe what you want to build and Lovable handles the code.
+- **Stay in sync**: every change made in Lovable is committed straight to this repository.
+- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+
+## Development
+
+Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+
+```sh
+git clone <this-repository-url>
+cd <repository-name>
+npm i
+npm run dev
+```

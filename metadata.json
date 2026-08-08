@@ -1,0 +1,6 @@
+{
+  "name": "LuxeSave - Status Saver",
+  "description": "LuxeSave - Premium WhatsApp Status Saver app for viewing, saving, organizing, favoriting, and sharing image & video statuses.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
