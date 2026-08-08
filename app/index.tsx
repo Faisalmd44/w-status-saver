@@ -1,35 +1,22 @@
-import { useEffect, useState } from 'react';
-import { Redirect } from 'expo-router';
-import { View, ActivityIndicator } from 'react-native';
-import { loadSettings } from '@/lib/settingsService';
+import { View, Text } from 'react-native';
 
 export default function Index() {
-  const [targetRoute, setTargetRoute] = useState<string | null>(null);
+  return (
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: '#0E1513',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Text style={{ color: '#3DDC84', fontSize: 24, fontWeight: 'bold' }}>
+        W Status Saver
+      </Text>
 
-  useEffect(() => {
-    const settings = loadSettings();
-
-    if (!settings.folderAccessGranted) {
-      setTargetRoute('/folder-access');
-    } else {
-      setTargetRoute('/home');
-    }
-  }, []);
-
-  if (!targetRoute) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: '#000000',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }}
-      >
-        <ActivityIndicator color="#3DDC84" size="large" />
-      </View>
-    );
-  }
-
-  return <Redirect href={targetRoute as any} />;
+      <Text style={{ color: '#FFFFFF', marginTop: 10 }}>
+        APP STARTED SUCCESSFULLY
+      </Text>
+    </View>
+  );
 }
