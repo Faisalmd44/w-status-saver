@@ -130,3 +130,22 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+## Android APK Testing (GitHub Actions)
+
+This repository includes an automated GitHub Actions workflow to build a **Debug APK** for testing on physical Android devices (supports Android 6.0 / API level 23 and above).
+
+### How to Trigger the APK Build
+1. Push changes to the `main` or `master` branch (build triggers automatically).
+2. Or trigger manually via GitHub Actions:
+   - Go to your repository on GitHub.
+   - Click the **Actions** tab.
+   - Select the **Build Android Debug APK** workflow from the left sidebar.
+   - Click **Run workflow** and select the branch to build.
+
+### Downloading the Generated APK
+1. Once the workflow completes, click on the specific workflow run in the **Actions** tab.
+2. Scroll down to the **Artifacts** section at the bottom of the summary page.
+3. Download the artifact named **`W-Status-Saver-debug-apk`**.
+4. Extract the ZIP file to obtain `app-debug.apk` and install it directly on your Android phone.
+
