@@ -71,7 +71,7 @@ export default function FolderAccessScreen() {
         <View style={styles.headerSection}>
           {/* Logo glow background */}
           <View style={styles.logoGlowRing}>
-            <Logo size={88} showFreeBadge={true} glow={true} />
+            <Logo size={88} glow={true} />
           </View>
 
           <Text style={styles.titleText}>Allow folder access</Text>

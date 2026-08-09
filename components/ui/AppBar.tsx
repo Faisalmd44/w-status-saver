@@ -43,7 +43,7 @@ export function AppBar({ title, subtitle, back, actions, brand, centerTitle }: A
 
       {brand ? (
         <View style={styles.brandRow}>
-          <Logo size={38} showFreeBadge={true} />
+          <Logo size={38} />
           <View style={styles.titleContainer}>
             <Text style={[typography.headingSmall, { color: colors.foreground }]}>
               W Status Saver

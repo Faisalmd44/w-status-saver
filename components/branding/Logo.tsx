@@ -8,15 +8,21 @@ interface LogoProps {
   showFreeBadge?: boolean;
 }
 
-export function Logo({ size = 44, glow = false }: LogoProps) {
+export function Logo({
+  size = 44,
+  glow = false,
+  showFreeBadge = false,
+}: LogoProps) {
   const { shadows } = useTheme();
-  const borderRadius = Math.round(size * 0.22);
+
+  const borderRadius = size * 0.25;
 
   return (
     <View style={styles.container}>
-      <View
+      <Image
+        source={require('@/assets/images/Wlogo.png')}
         style={[
-          styles.logoWrapper,
+          styles.logo,
           {
             width: size,
             height: size,
@@ -24,13 +30,14 @@ export function Logo({ size = 44, glow = false }: LogoProps) {
             ...(glow ? shadows.glow : {}),
           },
         ]}
-      >
-        <Image
-          source={require('@/assets/images/icon.png')}
-          style={{ width: size, height: size, borderRadius }}
-          resizeMode="contain"
-        />
-      </View>
+        resizeMode="cover"
+      />
+
+      {showFreeBadge ? (
+        <View style={styles.freeBadge}>
+          <Text style={styles.freeBadgeText}>FREE</Text>
+        </View>
+      ) : null}
     </View>
   );
 }
@@ -40,9 +47,13 @@ export function Wordmark() {
 
   return (
     <View style={styles.wordmarkContainer}>
-      <Text style={[typography.headingSmall, { color: '#3DDC84', fontWeight: '800' }]}>W</Text>
-      <Text style={[typography.headingSmall, { color: colors.foreground, fontWeight: '700' }]}>
-        {' '}Status Saver
+      <Text
+        style={[
+          typography.headingSmall,
+          { color: colors.foreground },
+        ]}
+      >
+        W Status Saver
       </Text>
     </View>
   );
@@ -51,16 +62,30 @@ export function Wordmark() {
 const styles = StyleSheet.create({
   container: {
     position: 'relative',
-    alignItems: 'center',
-    justifyContent: 'center',
   },
-  logoWrapper: {
+  logo: {
     overflow: 'hidden',
+  },
+  freeBadge: {
+    position: 'absolute',
+    top: -3,
+    right: -3,
+    backgroundColor: '#E53935',
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: '#FFFFFF',
+    zIndex: 10,
+  },
+  freeBadgeText: {
+    color: '#FFFFFF',
+    fontSize: 7,
+    fontWeight: '900',
+    letterSpacing: 0.2,
   },
   wordmarkContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
 });
-
-

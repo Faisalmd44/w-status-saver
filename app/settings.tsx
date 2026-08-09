@@ -139,7 +139,7 @@ export default function SettingsScreen() {
           {/* APP PROFILE CARD */}
           <View style={styles.profileCard}>
             <View style={styles.profileLeft}>
-              <Logo size={48} showFreeBadge={true} />
+              <Logo size={48} />
               <View style={styles.profileTextCol}>
                 <Text style={[typography.headingSmall, styles.profileName]}>
                   W Status Saver
@@ -522,7 +522,7 @@ export default function SettingsScreen() {
             </View>
 
             <View style={{ alignItems: 'center', marginVertical: 12 }}>
-              <Logo size={56} showFreeBadge={true} />
+              <Logo size={56} />
               <Text style={[typography.headingSmall, { color: '#FFFFFF', marginTop: 8 }]}>
                 W Status Saver
               </Text>
