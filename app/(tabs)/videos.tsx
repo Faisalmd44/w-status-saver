@@ -16,7 +16,10 @@ export default function VideosScreen() {
   const { statuses, toggleSave, toggleFavorite } = useStatuses();
   const [selectedStatus, setSelectedStatus] = useState<StatusMetadataItem | null>(null);
 
-  const videoStatuses = statuses.filter((item) => item.type === 'video');
+  // FIX: Added strict check for .mp4 files so all videos show up
+  const videoStatuses = statuses.filter(
+    (item) => item.type === 'video' || (item.uri && item.uri.toLowerCase().endsWith('.mp4'))
+  );
 
   return (
     <ScreenContainer scrollable padded={false}>
@@ -25,7 +28,6 @@ export default function VideosScreen() {
         subtitle={`${videoStatuses.length} HD video clips available`}
         centerTitle
       />
-
       <View style={styles.body}>
         {videoStatuses.length === 0 ? (
           <Card style={styles.emptyCard}>
@@ -44,7 +46,6 @@ export default function VideosScreen() {
                   style={styles.imageWrapper}
                 >
                   <Image source={{ uri: item.uri }} style={styles.thumbnail} />
-
                   <View style={styles.videoOverlay}>
                     <View style={styles.playCircle}>
                       <Play size={18} color="#FFFFFF" fill="#FFFFFF" />
@@ -53,7 +54,6 @@ export default function VideosScreen() {
                       <Text style={styles.durationText}>{item.duration || '0:15'}</Text>
                     </View>
                   </View>
-
                   <Pressable
                     onPress={() => toggleFavorite(item.id)}
                     style={styles.favButton}
@@ -78,7 +78,6 @@ export default function VideosScreen() {
                       {item.time}
                     </Text>
                   </View>
-
                   <IconButton
                     label="Save"
                     onPress={() => toggleSave(item.id)}
@@ -110,91 +109,18 @@ export default function VideosScreen() {
 }
 
 const styles = StyleSheet.create({
-  body: {
-    paddingHorizontal: spacing[4],
-    paddingTop: spacing[4],
-  },
-  emptyCard: {
-    padding: spacing[8],
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: spacing[2],
-  },
-  emptyTitle: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '700',
-    marginTop: 4,
-  },
-  emptySubtitle: {
-    color: '#8D9F96',
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing[3],
-  },
-  gridCard: {
-    width: '47.5%',
-  },
-  imageWrapper: {
-    height: 180,
-    width: '100%',
-    position: 'relative',
-    backgroundColor: '#1E2B22',
-  },
-  thumbnail: {
-    width: '100%',
-    height: '100%',
-    resizeMode: 'cover',
-  },
-  videoOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.25)',
-  },
-  playCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,0,0,0.65)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.3)',
-  },
-  durationBadge: {
-    position: 'absolute',
-    bottom: 8,
-    left: 8,
-    backgroundColor: 'rgba(0,0,0,0.75)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  durationText: {
-    color: '#FFFFFF',
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  favButton: {
-    position: 'absolute',
-    top: 8,
-    right: 8,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: spacing[2.5],
-  },
+  body: { paddingHorizontal: spacing[4], paddingTop: spacing[4] },
+  emptyCard: { padding: spacing[8], alignItems: 'center', justifyContent: 'center', gap: spacing[2] },
+  emptyTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: '700', marginTop: 4 },
+  emptySubtitle: { color: '#8D9F96', fontSize: 14, textAlign: 'center' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[3] },
+  gridCard: { width: '47.5%' },
+  imageWrapper: { height: 180, width: '100%', position: 'relative', backgroundColor: '#1E2B22' },
+  thumbnail: { width: '100%', height: '100%', resizeMode: 'cover' },
+  videoOverlay: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.25)' },
+  playCircle: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.65)', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },
+  durationBadge: { position: 'absolute', bottom: 8, left: 8, backgroundColor: 'rgba(0,0,0,0.75)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
+  durationText: { color: '#FFFFFF', fontSize: 10, fontWeight: '700' },
+  favButton: { position: 'absolute', top: 8, right: 8, width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' },
+  cardInfo: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing[2.5] },
 });
