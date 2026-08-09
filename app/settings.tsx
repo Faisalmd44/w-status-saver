@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, Switch, Pressable, ScrollView, Modal, Alert } from 'react-native';
+import { StyleSheet, Text, View, Switch, Pressable, ScrollView, Platform, Modal, Alert, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import * as FileSystem from 'expo-file-system';
+import { StorageAccessFramework } from 'expo-file-system';
 import { 
   ChevronLeft, Download, HardDrive, Bell, Folder, 
   ShieldCheck, Info, Sparkles, ChevronRight, X, Moon, Globe 
@@ -30,9 +30,16 @@ export default function SettingsScreen() {
 
   const handleGrantFolderAccess = async () => {
     try {
-      const { StorageAccessFramework } = FileSystem;
+      if (Platform.OS !== 'android') return;
+      
+      if (!StorageAccessFramework) {
+        Alert.alert('Error', 'Storage API is missing on this device.');
+        return;
+      }
+
       const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
-      if (permissions.granted && permissions.directoryUri) {
+      
+      if (permissions && permissions.granted && permissions.directoryUri) {
         const updated = {
           ...settings,
           folderAccessGranted: true,
@@ -58,7 +65,7 @@ export default function SettingsScreen() {
     <ScreenContainer scrollable={false} padded={false}>
       <ScrollView contentContainerStyle={styles.scrollBody} showsVerticalScrollIndicator={false}>
         
-        {/* ROUNDED HEADER CARD (Floating Pill) */}
+        {/* ROUNDED HEADER CARD */}
         <View style={styles.topHeaderCard}>
           <Pressable style={styles.backBtn} onPress={() => router.back()}>
             <ChevronLeft size={24} color="#FFFFFF" />
@@ -213,7 +220,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: 16,
-    marginTop: 8, // Detached from top
+    marginTop: 8,
   },
   backBtn: {
     width: 44,

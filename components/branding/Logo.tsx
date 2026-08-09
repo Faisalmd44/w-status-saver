@@ -14,7 +14,7 @@ export function Logo({ size = 40, glow = false }: LogoProps) {
     ]}>
       <Image
         source={require('@/assets/images/icon.png')}
-        style={{ width: '100%', height: '100%' }}
+        style={{ width: size, height: size, borderRadius: size / 2 }}
         resizeMode="cover"
       />
     </View>
@@ -25,7 +25,7 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: 'transparent',
     overflow: 'hidden',
-    backgroundColor: '#0A0F0D',
   },
 });

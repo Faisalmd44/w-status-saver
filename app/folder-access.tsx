@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, View, Pressable, Platform, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import * as FileSystem from 'expo-file-system';
+import { StorageAccessFramework } from 'expo-file-system';
 import { Folder, EyeOff, HardDrive, Check } from 'lucide-react-native';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { Logo } from '@/components/branding/Logo';
@@ -9,19 +9,22 @@ import { loadSettings, saveSettings } from '@/lib/settingsService';
 
 export default function FolderAccessScreen() {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   const handleAllowAccess = async () => {
+    if (loading) return;
+    
     try {
       if (Platform.OS !== 'android') return;
       
-      // Safety check taaki undefined error na aaye
-      if (!FileSystem.StorageAccessFramework) {
+      // Official direct check
+      if (!StorageAccessFramework) {
         Alert.alert('Error', 'Storage API is missing on this device.');
         return;
       }
 
-      // Direct official call bina destructure kiye
-      const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+      setLoading(true);
+      const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
       
       if (permissions && permissions.granted && permissions.directoryUri) {
         const curr = loadSettings();
@@ -31,11 +34,14 @@ export default function FolderAccessScreen() {
           safUri: permissions.directoryUri,
           onboardingCompleted: true,
         });
+        setLoading(false);
         router.replace('/home');
       } else {
-        Alert.alert('Cancelled', 'Aapne folder select nahi kiya. Please "Use this folder" par tap karein.');
+        setLoading(false);
+        Alert.alert('Cancelled', 'Aapne folder select nahi kiya. Status dekhne ke liye permission zaroori hai.');
       }
     } catch (e: any) {
+      setLoading(false);
       Alert.alert('System Error', e.message || 'File picker open nahi ho paya.');
     }
   };
@@ -101,12 +107,14 @@ export default function FolderAccessScreen() {
           <Pressable 
             style={({ pressed }) => [styles.allowButton, pressed && { opacity: 0.7 }]} 
             onPress={handleAllowAccess}
+            disabled={loading}
           >
-            <Text style={styles.allowBtnText}>Allow access</Text>
+            <Text style={styles.allowBtnText}>{loading ? 'Opening...' : 'Allow access'}</Text>
           </Pressable>
           <Pressable 
             style={({ pressed }) => [styles.notNowButton, pressed && { opacity: 0.7 }]} 
             onPress={handleNotNow}
+            disabled={loading}
           >
             <Text style={styles.notNowText}>Not now</Text>
           </Pressable>
