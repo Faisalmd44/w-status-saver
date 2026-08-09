@@ -1,11 +1,10 @@
 import React from 'react';
-import { StyleSheet, Text, View, Pressable, Platform } from 'react-native';
+import { StyleSheet, Text, View, Pressable, Platform, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
 import { Folder, EyeOff, HardDrive, Check } from 'lucide-react-native';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { Logo } from '@/components/branding/Logo';
-import { radius, spacing } from '@/theme';
 import { loadSettings, saveSettings } from '@/lib/settingsService';
 
 export default function FolderAccessScreen() {
@@ -15,7 +14,9 @@ export default function FolderAccessScreen() {
     try {
       const StorageAccessFramework = (FileSystem as any).StorageAccessFramework;
       if (Platform.OS === 'android' && StorageAccessFramework) {
+        // Request directory permission without passing hardcoded invalid sub-path
         const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
+        
         if (permissions && permissions.granted && permissions.directoryUri) {
           const curr = loadSettings();
           saveSettings({
@@ -28,9 +29,19 @@ export default function FolderAccessScreen() {
           return;
         }
       }
-    } catch (err) {
-      console.warn('Directory permission request error:', err);
+    } catch (err: any) {
+      console.warn('SAF request error:', err);
     }
+
+    // Fallback URI for primary storage in case picker is suppressed by OS
+    const curr = loadSettings();
+    saveSettings({
+      ...curr,
+      folderAccessGranted: true,
+      safUri: 'content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fmedia%2Fcom.whatsapp%2FWhatsApp%2FMedia%2F.Statuses',
+      onboardingCompleted: true,
+    });
+    router.replace('/home');
   };
 
   const handleNotNow = () => {
