@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, Pressable, Platform, Alert } from 'react-native';
+import { StyleSheet, Text, View, Pressable, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
 import { Folder, EyeOff, HardDrive, Check } from 'lucide-react-native';
@@ -12,12 +12,11 @@ export default function FolderAccessScreen() {
   const router = useRouter();
 
   const handleAllowAccess = async () => {
-    const StorageAccessFramework = (FileSystem as any).StorageAccessFramework;
-
-    if (Platform.OS === 'android' && StorageAccessFramework) {
-      try {
+    try {
+      const StorageAccessFramework = (FileSystem as any).StorageAccessFramework;
+      if (Platform.OS === 'android' && StorageAccessFramework) {
         const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
-        if (permissions.granted && permissions.directoryUri) {
+        if (permissions && permissions.granted && permissions.directoryUri) {
           const curr = loadSettings();
           saveSettings({
             ...curr,
@@ -28,23 +27,10 @@ export default function FolderAccessScreen() {
           router.replace('/home');
           return;
         }
-      } catch (err) {
-        console.warn('SAF directory picker error:', err);
       }
+    } catch (err) {
+      console.warn('Directory permission request error:', err);
     }
-
-    // Direct system picker retry if cancelled
-    Alert.alert(
-      'Storage Permission Needed',
-      'Please select your WhatsApp or Media folder in the file picker and tap "USE THIS FOLDER" to show statuses.',
-      [
-        {
-          text: 'Open Picker',
-          onPress: () => handleAllowAccess(),
-        },
-        { text: 'Cancel', style: 'cancel' },
-      ]
-    );
   };
 
   const handleNotNow = () => {
@@ -61,8 +47,8 @@ export default function FolderAccessScreen() {
       <View style={styles.container}>
         {/* HEADER SECTION */}
         <View style={styles.headerSection}>
-          <View style={styles.logoRing}>
-            <Logo size={90} glow={true} />
+          <View style={styles.logoWrapper}>
+            <Logo size={96} glow={true} />
           </View>
           <Text style={styles.titleText}>Allow folder access</Text>
           <Text style={styles.descText}>
@@ -70,43 +56,43 @@ export default function FolderAccessScreen() {
           </Text>
         </View>
 
-        {/* CARDS LIST */}
+        {/* CARDS GROUP */}
         <View style={styles.cardsGroup}>
           <View style={styles.cardItem}>
             <View style={styles.iconCircle}>
-              <Folder size={20} color="#3DDC84" strokeWidth={2} />
+              <Folder size={22} color="#3DDC84" strokeWidth={2} />
             </View>
             <View style={styles.cardTextCol}>
               <Text style={styles.cardTitle}>Read the Statuses folder</Text>
               <Text style={styles.cardSub}>Only the WhatsApp status folder is scanned.</Text>
             </View>
-            <Check size={20} color="#3DDC84" strokeWidth={2.5} />
+            <Check size={22} color="#3DDC84" strokeWidth={2.5} />
           </View>
 
           <View style={styles.cardItem}>
             <View style={styles.iconCircle}>
-              <EyeOff size={20} color="#3DDC84" strokeWidth={2} />
+              <EyeOff size={22} color="#3DDC84" strokeWidth={2} />
             </View>
             <View style={styles.cardTextCol}>
               <Text style={styles.cardTitle}>No chats, no contacts</Text>
               <Text style={styles.cardSub}>Messages and personal data are never touched.</Text>
             </View>
-            <Check size={20} color="#3DDC84" strokeWidth={2.5} />
+            <Check size={22} color="#3DDC84" strokeWidth={2.5} />
           </View>
 
           <View style={styles.cardItem}>
             <View style={styles.iconCircle}>
-              <HardDrive size={20} color="#3DDC84" strokeWidth={2} />
+              <HardDrive size={22} color="#3DDC84" strokeWidth={2} />
             </View>
             <View style={styles.cardTextCol}>
               <Text style={styles.cardTitle}>Saves stay local</Text>
               <Text style={styles.cardSub}>Downloads go to your gallery, offline.</Text>
             </View>
-            <Check size={20} color="#3DDC84" strokeWidth={2.5} />
+            <Check size={22} color="#3DDC84" strokeWidth={2.5} />
           </View>
         </View>
 
-        {/* BOTTOM BUTTONS */}
+        {/* ACTIONS */}
         <View style={styles.bottomSection}>
           <Pressable style={styles.allowButton} onPress={handleAllowAccess}>
             <Text style={styles.allowBtnText}>Allow access</Text>
@@ -123,48 +109,49 @@ export default function FolderAccessScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
-    paddingBottom: spacing.lg,
+    paddingHorizontal: 20,
+    paddingTop: 30,
+    paddingBottom: 24,
     justifyContent: 'space-between',
-    backgroundColor: '#0D1412',
+    backgroundColor: '#0A0F0D',
   },
   headerSection: {
     alignItems: 'center',
-    marginTop: spacing.sm,
+    marginTop: 10,
   },
-  logoRing: {
-    marginBottom: spacing.md,
+  logoWrapper: {
+    marginBottom: 20,
   },
   titleText: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: spacing.xs,
+    marginBottom: 8,
   },
   descText: {
     fontSize: 14,
-    color: '#A0AEA6',
+    color: '#8D9F96',
     textAlign: 'center',
     lineHeight: 20,
-    paddingHorizontal: spacing.xs,
+    paddingHorizontal: 10,
   },
   cardsGroup: {
-    gap: spacing.md,
-    marginVertical: spacing.md,
+    gap: 12,
+    marginVertical: 10,
   },
   cardItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#16221E',
-    borderRadius: radius.lg,
-    padding: spacing.md,
-    gap: spacing.sm,
+    backgroundColor: '#121D18',
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+    gap: 14,
   },
   iconCircle: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: 'rgba(61, 220, 132, 0.08)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -173,36 +160,38 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cardTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
-    marginBottom: 2,
+    marginBottom: 3,
   },
   cardSub: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#8D9F96',
   },
   bottomSection: {
-    gap: spacing.sm,
-    marginBottom: spacing.xs,
+    gap: 10,
   },
   allowButton: {
     backgroundColor: '#3DDC84',
     paddingVertical: 16,
-    borderRadius: radius.xl,
+    borderRadius: 28,
     alignItems: 'center',
   },
   allowBtnText: {
-    color: '#0D1412',
-    fontSize: 16,
+    color: '#0A0F0D',
+    fontSize: 17,
     fontWeight: '700',
   },
   notNowButton: {
-    paddingVertical: 10,
+    backgroundColor: '#121D18',
+    paddingVertical: 16,
+    borderRadius: 28,
     alignItems: 'center',
   },
   notNowText: {
-    color: '#8D9F96',
-    fontSize: 14,
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, Switch, Pressable, ScrollView, Alert, Platform, Modal } from 'react-native';
+import { StyleSheet, Text, View, Switch, Pressable, ScrollView, Platform, Modal } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
 import { 
-  ChevronLeft, Moon, Globe, Download, HardDrive, Bell, Folder, 
-  ShieldCheck, Info, Sparkles, Check, ChevronRight, X 
+  ChevronLeft, Download, HardDrive, Bell, Folder, 
+  ShieldCheck, Info, Sparkles, ChevronRight, X 
 } from 'lucide-react-native';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
-import { radius, spacing } from '@/theme';
 import { loadSettings, saveSettings, AppSettings } from '@/lib/settingsService';
 import { useStatuses } from '@/hooks/useStatuses';
 
@@ -29,11 +28,11 @@ export default function SettingsScreen() {
   };
 
   const handleGrantFolderAccess = async () => {
-    const StorageAccessFramework = (FileSystem as any).StorageAccessFramework;
-    if (Platform.OS === 'android' && StorageAccessFramework) {
-      try {
+    try {
+      const StorageAccessFramework = (FileSystem as any).StorageAccessFramework;
+      if (Platform.OS === 'android' && StorageAccessFramework) {
         const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
-        if (permissions.granted && permissions.directoryUri) {
+        if (permissions && permissions.granted && permissions.directoryUri) {
           const updated = {
             ...settings,
             folderAccessGranted: true,
@@ -41,45 +40,12 @@ export default function SettingsScreen() {
           };
           setSettingsState(updated);
           saveSettings(updated);
-          Alert.alert('Access Granted', 'WhatsApp Status folder permission is verified.');
           refresh();
-          return;
         }
-      } catch (err) {
-        console.warn('SAF permission request error:', err);
       }
+    } catch (err) {
+      console.warn('SAF permission request error:', err);
     }
-
-    Alert.alert(
-      'Storage Access Required',
-      'Select your WhatsApp Statuses directory in Android File Picker to grant permission:\n\nAndroid/media/com.whatsapp/WhatsApp/Media/.Statuses',
-      [
-        {
-          text: 'Open Folder Picker',
-          onPress: async () => {
-            if (Platform.OS === 'android' && StorageAccessFramework) {
-              try {
-                const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
-                if (permissions.granted && permissions.directoryUri) {
-                  const updated = {
-                    ...settings,
-                    folderAccessGranted: true,
-                    safUri: permissions.directoryUri,
-                  };
-                  setSettingsState(updated);
-                  saveSettings(updated);
-                  Alert.alert('Access Granted', 'WhatsApp Status folder permission is verified.');
-                  refresh();
-                }
-              } catch (e) {
-                console.warn('Folder picker failed', e);
-              }
-            }
-          },
-        },
-        { text: 'Cancel', style: 'cancel' },
-      ]
-    );
   };
 
   const savedItems = statuses.filter((item) => item.isSaved);
@@ -111,7 +77,7 @@ export default function SettingsScreen() {
             <Switch
               value={settings.autoSave}
               onValueChange={() => toggleSetting('autoSave')}
-              trackColor={{ false: '#26332D', true: 'rgba(61, 220, 132, 0.4)' }}
+              trackColor={{ false: '#1E2C26', true: 'rgba(61, 220, 132, 0.4)' }}
               thumbColor={settings.autoSave ? '#3DDC84' : '#8D9F96'}
             />
           </View>
@@ -142,7 +108,7 @@ export default function SettingsScreen() {
             <Switch
               value={settings.statusAlerts}
               onValueChange={() => toggleSetting('statusAlerts')}
-              trackColor={{ false: '#26332D', true: 'rgba(61, 220, 132, 0.4)' }}
+              trackColor={{ false: '#1E2C26', true: 'rgba(61, 220, 132, 0.4)' }}
               thumbColor={settings.statusAlerts ? '#3DDC84' : '#8D9F96'}
             />
           </View>
@@ -162,7 +128,9 @@ export default function SettingsScreen() {
               </Text>
             </View>
             <View style={styles.actionBadge}>
-              <Text style={styles.actionBadgeText}>Change</Text>
+              <Text style={styles.actionBadgeText}>
+                {settings.folderAccessGranted ? 'Change' : 'Grant'}
+              </Text>
             </View>
           </Pressable>
         </View>
@@ -204,7 +172,7 @@ export default function SettingsScreen() {
               <Text style={styles.itemTitle}>App Version</Text>
             </View>
             <View style={styles.versionBadge}>
-              <Text style={styles.versionBadgeText}>v3.2.0 (Build 302)</Text>
+              <Text style={styles.versionBadgeText}>Latest</Text>
             </View>
           </View>
         </View>
@@ -266,15 +234,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    backgroundColor: '#0D1412',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: '#0A0F0D',
   },
   backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#16221E',
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#121D18',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -284,28 +252,27 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   scrollBody: {
-    padding: spacing.md,
-    paddingBottom: spacing.xxl,
-    gap: spacing.xs,
+    padding: 16,
+    paddingBottom: 40,
   },
   sectionTitle: {
     fontSize: 12,
     fontWeight: '700',
     color: '#8D9F96',
     letterSpacing: 1,
-    marginTop: spacing.md,
-    marginBottom: spacing.xs,
+    marginTop: 18,
+    marginBottom: 8,
   },
   cardGroup: {
-    backgroundColor: '#16221E',
-    borderRadius: radius.lg,
+    backgroundColor: '#121D18',
+    borderRadius: 20,
     overflow: 'hidden',
   },
   cardRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.md,
-    gap: spacing.md,
+    padding: 16,
+    gap: 14,
   },
   iconBox: {
     width: 38,
@@ -330,14 +297,14 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
-    marginLeft: 66,
+    backgroundColor: 'rgba(255, 255, 255, 0.04)',
+    marginLeft: 68,
   },
   actionBadge: {
-    backgroundColor: '#1C2E27',
-    paddingHorizontal: 12,
+    backgroundColor: '#1E2C26',
+    paddingHorizontal: 14,
     paddingVertical: 6,
-    borderRadius: radius.md,
+    borderRadius: 12,
   },
   actionBadgeText: {
     color: '#3DDC84',
@@ -345,10 +312,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   versionBadge: {
-    backgroundColor: '#1C2E27',
+    backgroundColor: '#1E2C26',
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: radius.sm,
+    borderRadius: 8,
   },
   versionBadgeText: {
     color: '#8D9F96',
@@ -358,18 +325,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.7)',
     justifyContent: 'center',
-    padding: spacing.lg,
+    padding: 20,
   },
   modalContent: {
-    backgroundColor: '#16221E',
-    borderRadius: radius.lg,
-    padding: spacing.lg,
+    backgroundColor: '#121D18',
+    borderRadius: 20,
+    padding: 20,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md,
+    marginBottom: 14,
   },
   modalTitle: {
     fontSize: 18,
@@ -378,7 +345,7 @@ const styles = StyleSheet.create({
   },
   modalText: {
     fontSize: 14,
-    color: '#A0AEA6',
+    color: '#8D9F96',
     lineHeight: 22,
   },
 });
