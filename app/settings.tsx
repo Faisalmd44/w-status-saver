@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, Switch, Pressable, ScrollView, Platform, Modal } from 'react-native';
+import { StyleSheet, Text, View, Switch, Pressable, ScrollView, Platform, Modal, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
 import { 
@@ -43,8 +43,8 @@ export default function SettingsScreen() {
           refresh();
         }
       }
-    } catch (err) {
-      console.warn('SAF permission request error:', err);
+    } catch (err: any) {
+      Alert.alert('Notice', 'System folder picker cancelled or closed.');
     }
   };
 
@@ -117,7 +117,10 @@ export default function SettingsScreen() {
         {/* PERMISSIONS */}
         <Text style={styles.sectionTitle}>PERMISSIONS</Text>
         <View style={styles.cardGroup}>
-          <Pressable style={styles.cardRow} onPress={handleGrantFolderAccess}>
+          <Pressable 
+            style={({ pressed }) => [styles.cardRow, pressed && { opacity: 0.7 }]} 
+            onPress={handleGrantFolderAccess}
+          >
             <View style={styles.iconBox}>
               <Folder size={20} color="#3DDC84" />
             </View>

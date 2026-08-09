@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, Pressable, Platform, ActivityIndicator, Alert } from 'react-native';
+import React from 'react';
+import { StyleSheet, Text, View, Pressable, Platform, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
 import { Folder, EyeOff, HardDrive, Check } from 'lucide-react-native';
@@ -9,17 +9,12 @@ import { loadSettings, saveSettings } from '@/lib/settingsService';
 
 export default function FolderAccessScreen() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
 
   const handleAllowAccess = async () => {
-    if (loading) return;
-    setLoading(true);
-
     try {
       const StorageAccessFramework = (FileSystem as any).StorageAccessFramework;
       
       if (Platform.OS === 'android' && StorageAccessFramework) {
-        // Open native Android system file picker
         const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
         
         if (permissions && permissions.granted && permissions.directoryUri) {
@@ -30,27 +25,15 @@ export default function FolderAccessScreen() {
             safUri: permissions.directoryUri,
             onboardingCompleted: true,
           });
-          setLoading(false);
           router.replace('/home');
-          return;
-        } else {
-          // User cancelled the picker
-          setLoading(false);
-          return;
         }
       }
     } catch (e: any) {
-      console.warn('SAF Picker error:', e);
-      setLoading(false);
       Alert.alert(
-        'Folder Access Required',
-        'Please select your WhatsApp Media folder in the system file picker to grant permission.',
-        [{ text: 'OK' }]
+        'System Action Blocked',
+        'Your phone restricted the folder picker. Try again or check app permissions.'
       );
-      return;
     }
-
-    setLoading(false);
   };
 
   const handleNotNow = () => {
@@ -65,7 +48,6 @@ export default function FolderAccessScreen() {
   return (
     <ScreenContainer scrollable={false} padded={false}>
       <View style={styles.container}>
-        {/* HEADER SECTION */}
         <View style={styles.headerSection}>
           <View style={styles.logoWrapper}>
             <Logo size={96} glow={true} />
@@ -76,7 +58,6 @@ export default function FolderAccessScreen() {
           </Text>
         </View>
 
-        {/* CARDS GROUP */}
         <View style={styles.cardsGroup}>
           <View style={styles.cardItem}>
             <View style={styles.iconCircle}>
@@ -112,23 +93,16 @@ export default function FolderAccessScreen() {
           </View>
         </View>
 
-        {/* ACTIONS */}
         <View style={styles.bottomSection}>
           <Pressable 
-            style={({ pressed }) => [styles.allowButton, pressed && { opacity: 0.8 }]} 
+            style={({ pressed }) => [styles.allowButton, pressed && { opacity: 0.7 }]} 
             onPress={handleAllowAccess}
-            disabled={loading}
           >
-            {loading ? (
-              <ActivityIndicator color="#0A0F0D" />
-            ) : (
-              <Text style={styles.allowBtnText}>Allow access</Text>
-            )}
+            <Text style={styles.allowBtnText}>Allow access</Text>
           </Pressable>
           <Pressable 
-            style={({ pressed }) => [styles.notNowButton, pressed && { opacity: 0.8 }]} 
+            style={({ pressed }) => [styles.notNowButton, pressed && { opacity: 0.7 }]} 
             onPress={handleNotNow}
-            disabled={loading}
           >
             <Text style={styles.notNowText}>Not now</Text>
           </Pressable>
