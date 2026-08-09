@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, Pressable, Alert } from 'react-native';
+import { StyleSheet, Text, View, Pressable, Platform, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
 import { Folder, EyeOff, HardDrive, Check } from 'lucide-react-native';
@@ -12,11 +12,18 @@ export default function FolderAccessScreen() {
 
   const handleAllowAccess = async () => {
     try {
-      const { StorageAccessFramework } = FileSystem;
-      // Sidha native Android system picker ko call karega
-      const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
+      if (Platform.OS !== 'android') return;
       
-      if (permissions.granted && permissions.directoryUri) {
+      // Safety check taaki undefined error na aaye
+      if (!FileSystem.StorageAccessFramework) {
+        Alert.alert('Error', 'Storage API is missing on this device.');
+        return;
+      }
+
+      // Direct official call bina destructure kiye
+      const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+      
+      if (permissions && permissions.granted && permissions.directoryUri) {
         const curr = loadSettings();
         saveSettings({
           ...curr,
