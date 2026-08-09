@@ -15,7 +15,9 @@ export default function FolderAccessScreen() {
 
     if (Platform.OS === 'android' && StorageAccessFramework) {
       try {
+        // First try requesting directory permission directly from system file picker
         const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
+        
         if (permissions.granted && permissions.directoryUri) {
           const curr = loadSettings();
           saveSettings({
@@ -26,29 +28,22 @@ export default function FolderAccessScreen() {
           });
           router.replace('/home');
           return;
+        } else {
+          Alert.alert('Permission Required', 'You need to select a folder and tap "USE THIS FOLDER" to grant access.');
+          return;
         }
-      } catch (err) {
-        console.warn('SAF folder selection failed or cancelled:', err);
+      } catch (err: any) {
+        console.warn('SAF folder selection error:', err);
       }
     }
 
-    // Fallback if SAF dialog is cancelled or running in web preview
     Alert.alert(
-      'Storage Access Framework',
-      'Select your WhatsApp Statuses directory in Android File Picker to grant permission:\n\nAndroid/media/com.whatsapp/WhatsApp/Media/.Statuses',
+      'Storage Access Required',
+      'Please select your WhatsApp or Media folder in the system picker and tap "USE THIS FOLDER" at the bottom.',
       [
         {
-          text: 'Open Folder Picker',
-          onPress: () => {
-            const curr = loadSettings();
-            saveSettings({
-              ...curr,
-              folderAccessGranted: true,
-              safUri: 'content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fmedia%2Fcom.whatsapp%2FWhatsApp%2FMedia%2F.Statuses',
-              onboardingCompleted: true,
-            });
-            router.replace('/home');
-          },
+          text: 'Try Again',
+          onPress: () => handleAllowAccess(),
         },
         { text: 'Cancel', style: 'cancel' },
       ]
@@ -67,85 +62,57 @@ export default function FolderAccessScreen() {
   return (
     <ScreenContainer scrollable={false} padded={false}>
       <View style={styles.container}>
-        {/* HEADER */}
         <View style={styles.headerSection}>
-          {/* Logo glow background */}
           <View style={styles.logoGlowRing}>
             <Logo size={88} glow={true} />
           </View>
-
           <Text style={styles.titleText}>Allow folder access</Text>
           <Text style={styles.descText}>
-            W Status Saver needs one-time access to the WhatsApp status folder to
-            show what your contacts posted today.
+            W Status Saver needs one-time access to the WhatsApp status folder to show what your contacts posted today.
           </Text>
         </View>
 
-        {/* INFO CARDS */}
         <View style={styles.cardsGroup}>
-          {/* CARD 1 */}
           <View style={styles.cardItem}>
             <View style={styles.iconCircle}>
               <Folder size={20} color="#3DDC84" strokeWidth={2} />
             </View>
             <View style={styles.cardTextCol}>
               <Text style={styles.cardTitle}>Read the Statuses folder</Text>
-              <Text style={styles.cardSub}>
-                Only the WhatsApp status folder is scanned.
-              </Text>
+              <Text style={styles.cardSub}>Only the WhatsApp status folder is scanned.</Text>
             </View>
             <Check size={20} color="#3DDC84" strokeWidth={2.5} />
           </View>
 
-          {/* CARD 2 */}
           <View style={styles.cardItem}>
             <View style={styles.iconCircle}>
               <EyeOff size={20} color="#3DDC84" strokeWidth={2} />
             </View>
             <View style={styles.cardTextCol}>
               <Text style={styles.cardTitle}>No chats, no contacts</Text>
-              <Text style={styles.cardSub}>
-                Messages and personal data are never touched.
-              </Text>
+              <Text style={styles.cardSub}>Messages and personal data are never touched.</Text>
             </View>
             <Check size={20} color="#3DDC84" strokeWidth={2.5} />
           </View>
 
-          {/* CARD 3 */}
           <View style={styles.cardItem}>
             <View style={styles.iconCircle}>
               <HardDrive size={20} color="#3DDC84" strokeWidth={2} />
             </View>
             <View style={styles.cardTextCol}>
               <Text style={styles.cardTitle}>Saves stay local</Text>
-              <Text style={styles.cardSub}>
-                Downloads go to your gallery, offline.
-              </Text>
+              <Text style={styles.cardSub}>Your media never leaves your phone.</Text>
             </View>
             <Check size={20} color="#3DDC84" strokeWidth={2.5} />
           </View>
         </View>
 
-        {/* BOTTOM BUTTONS */}
-        <View style={styles.buttonsGroup}>
-          <Pressable
-            onPress={handleAllowAccess}
-            style={({ pressed }) => [
-              styles.allowBtn,
-              { opacity: pressed ? 0.88 : 1 },
-            ]}
-          >
-            <Text style={styles.allowBtnText}>Allow access</Text>
+        <View style={styles.bottomSection}>
+          <Pressable style={styles.allowButton} onPress={handleAllowAccess}>
+            <Text style={styles.allowBtnText}>Grant Access</Text>
           </Pressable>
-
-          <Pressable
-            onPress={handleNotNow}
-            style={({ pressed }) => [
-              styles.notNowBtn,
-              { opacity: pressed ? 0.7 : 1 },
-            ]}
-          >
-            <Text style={styles.notNowBtnText}>Not now</Text>
+          <Pressable style={styles.notNowButton} onPress={handleNotNow}>
+            <Text style={styles.notNowText}>Not Now</Text>
           </Pressable>
         </View>
       </View>
@@ -156,63 +123,49 @@ export default function FolderAccessScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
-    paddingHorizontal: spacing[5],
-    paddingTop: spacing[4],
-    paddingBottom: spacing[6],
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.xl,
+    paddingBottom: spacing.lg,
     justifyContent: 'space-between',
+    backgroundColor: '#0D1412',
   },
   headerSection: {
     alignItems: 'center',
-    paddingTop: spacing[2],
+    marginTop: spacing.md,
   },
   logoGlowRing: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    borderWidth: 1,
-    borderColor: 'rgba(61, 220, 132, 0.12)',
-    backgroundColor: 'rgba(61, 220, 132, 0.03)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing[4],
+    marginBottom: spacing.md,
   },
   titleText: {
-    color: '#FFFFFF',
     fontSize: 24,
-    fontWeight: '800',
-    letterSpacing: -0.4,
-    textAlign: 'center',
-    marginBottom: spacing[2],
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: spacing.xs,
   },
   descText: {
-    color: '#99A8A0',
     fontSize: 14,
-    lineHeight: 20,
+    color: '#A0AEA6',
     textAlign: 'center',
-    paddingHorizontal: spacing[2],
+    lineHeight: 20,
+    paddingHorizontal: spacing.md,
   },
   cardsGroup: {
-    gap: spacing[3],
-    marginVertical: spacing[3],
+    gap: spacing.sm,
+    marginVertical: spacing.md,
   },
   cardItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing[4],
-    backgroundColor: '#121C18',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.08)',
-    gap: spacing[3],
+    backgroundColor: '#16221E',
+    borderRadius: radius.lg,
+    padding: spacing.md,
+    gap: spacing.sm,
   },
   iconCircle: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: 'rgba(61, 220, 132, 0.12)',
-    borderWidth: 1,
-    borderColor: '#1A6B3E',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(61, 220, 132, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -220,42 +173,35 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   cardTitle: {
-    color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 2,
   },
   cardSub: {
+    fontSize: 12,
     color: '#8D9F96',
-    fontSize: 13,
-    marginTop: 2,
   },
-  buttonsGroup: {
-    gap: spacing[2.5],
+  bottomSection: {
+    gap: spacing.xs,
   },
-  allowBtn: {
-    height: 52,
-    borderRadius: 26,
+  allowButton: {
     backgroundColor: '#3DDC84',
+    paddingVertical: 14,
+    borderRadius: radius.md,
     alignItems: 'center',
-    justifyContent: 'center',
   },
   allowBtnText: {
-    color: '#0A140F',
+    color: '#0D1412',
     fontSize: 16,
     fontWeight: '700',
   },
-  notNowBtn: {
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: '#121A17',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
+  notNowButton: {
+    paddingVertical: 12,
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  notNowBtnText: {
-    color: '#A0B0A8',
-    fontSize: 15,
-    fontWeight: '600',
+  notNowText: {
+    color: '#8D9F96',
+    fontSize: 14,
   },
 });

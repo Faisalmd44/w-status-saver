@@ -155,7 +155,30 @@ export async function scanWhatsAppStatuses(safUri: string): Promise<{
       return { statuses: [], permissionError: false };
     }
 
-    const fileUris: string[] = await StorageAccessFramework.readDirectoryAsync(safUri);
+    let fileUris: string[] = [];
+
+    try {
+      const directFiles = await StorageAccessFramework.readDirectoryAsync(safUri);
+
+      // Check if user granted access to parent folder containing '.Statuses'
+      const statusSubFolderUri = directFiles.find((uri: string) => {
+        const dec = decodeURIComponent(uri);
+        return dec.includes('.Statuses');
+      });
+
+      if (statusSubFolderUri) {
+        try {
+          fileUris = await StorageAccessFramework.readDirectoryAsync(statusSubFolderUri);
+        } catch {
+          fileUris = directFiles;
+        }
+      } else {
+        fileUris = directFiles;
+      }
+    } catch (e) {
+      console.warn('Failed to read SAF directory:', e);
+      return { statuses: [], permissionError: true };
+    }
 
     if (!Array.isArray(fileUris)) {
       return { statuses: [], permissionError: false };
@@ -172,32 +195,29 @@ export async function scanWhatsAppStatuses(safUri: string): Promise<{
       const decodedUri = decodeURIComponent(fileUri);
       const rawFileName = decodedUri.split('/').pop() || decodedUri.split('%2F').pop() || '';
 
-      if (
-        !rawFileName ||
-        rawFileName.startsWith('.') ||
-        rawFileName === '.nomedia' ||
-        rawFileName.includes('.nomedia')
-      ) {
+      // Skip empty or nomedia files
+      if (!rawFileName || rawFileName === '.nomedia' || rawFileName.includes('.nomedia')) {
         continue;
       }
 
       const lowerName = rawFileName.toLowerCase();
       let type: 'image' | 'video' | null = null;
+
       if (
-        lowerName.endsWith('.jpg') ||
-        lowerName.endsWith('.jpeg') ||
-        lowerName.endsWith('.png') ||
-        lowerName.endsWith('.webp') ||
-        lowerName.endsWith('.gif')
+        lowerName.includes('.jpg') ||
+        lowerName.includes('.jpeg') ||
+        lowerName.includes('.png') ||
+        lowerName.includes('.webp') ||
+        lowerName.includes('.gif')
       ) {
         type = 'image';
       } else if (
-        lowerName.endsWith('.mp4') ||
-        lowerName.endsWith('.3gp') ||
-        lowerName.endsWith('.mkv') ||
-        lowerName.endsWith('.webm') ||
-        lowerName.endsWith('.avi') ||
-        lowerName.endsWith('.mov')
+        lowerName.includes('.mp4') ||
+        lowerName.includes('.3gp') ||
+        lowerName.includes('.mkv') ||
+        lowerName.includes('.webm') ||
+        lowerName.includes('.avi') ||
+        lowerName.includes('.mov')
       ) {
         type = 'video';
       }
@@ -321,6 +341,7 @@ export async function saveStatusCopy(item: StatusMetadataItem): Promise<SavedRec
 export async function deleteSavedStatusCopy(item: StatusMetadataItem): Promise<void> {
   const records = loadSavedRecords();
   const targetRecord = records.find((r) => r.id === item.id);
+
   const targetSavedUri = item.savedUri || targetRecord?.savedUri || `${SAVED_DIR}${item.id}`;
 
   // 1. Delete local file copy in saved_statuses/
