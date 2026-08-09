@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, Pressable, Platform, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { StorageAccessFramework } from 'expo-file-system';
+import { Directory } from 'expo-file-system';
 import { Folder, EyeOff, HardDrive, Check } from 'lucide-react-native';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { Logo } from '@/components/branding/Logo';
@@ -13,36 +13,41 @@ export default function FolderAccessScreen() {
 
   const handleAllowAccess = async () => {
     if (loading) return;
-    
+
     try {
       if (Platform.OS !== 'android') return;
-      
-      // Official direct check
-      if (!StorageAccessFramework) {
-        Alert.alert('Error', 'Storage API is missing on this device.');
-        return;
-      }
 
       setLoading(true);
-      const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
-      
-      if (permissions && permissions.granted && permissions.directoryUri) {
+
+      const directory = await Directory.pickDirectoryAsync();
+
+      if (directory && directory.uri) {
         const curr = loadSettings();
+
         saveSettings({
           ...curr,
           folderAccessGranted: true,
-          safUri: permissions.directoryUri,
+          safUri: directory.uri,
           onboardingCompleted: true,
         });
+
         setLoading(false);
         router.replace('/home');
       } else {
         setLoading(false);
-        Alert.alert('Cancelled', 'Aapne folder select nahi kiya. Status dekhne ke liye permission zaroori hai.');
+        Alert.alert(
+          'Cancelled',
+          'Aapne folder select nahi kiya. Status dekhne ke liye permission zaroori hai.'
+        );
       }
     } catch (e: any) {
       setLoading(false);
-      Alert.alert('System Error', e.message || 'File picker open nahi ho paya.');
+      console.error('Directory picker error:', e);
+
+      Alert.alert(
+        'System Error',
+        e?.message || 'File picker open nahi ho paya.'
+      );
     }
   };
 

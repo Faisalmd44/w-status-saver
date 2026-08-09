@@ -1,4 +1,5 @@
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
+import { Directory } from 'expo-file-system';
 import { Platform } from 'react-native';
 import { safeCustomStorage } from './supabase';
 
@@ -150,33 +151,46 @@ export async function scanWhatsAppStatuses(safUri: string): Promise<{
   }
 
   try {
-    const StorageAccessFramework = (FileSystem as any).StorageAccessFramework;
-    if (!StorageAccessFramework) {
-      return { statuses: [], permissionError: false };
-    }
+    const selectedDirectory = new Directory(safUri);
 
     let fileUris: string[] = [];
 
     try {
-      const directFiles = await StorageAccessFramework.readDirectoryAsync(safUri);
+      console.log('Selected directory URI:', safUri);
 
-      // Check if user granted access to parent folder containing '.Statuses'
-      const statusSubFolderUri = directFiles.find((uri: string) => {
-        const dec = decodeURIComponent(uri);
-        return dec.includes('.Statuses');
-      });
+      const entries = selectedDirectory.list();
 
-      if (statusSubFolderUri) {
-        try {
-          fileUris = await StorageAccessFramework.readDirectoryAsync(statusSubFolderUri);
-        } catch {
-          fileUris = directFiles;
-        }
+      console.log('Directory entries:', entries.map((entry) => ({
+        name: entry.name,
+        uri: entry.uri,
+        type: entry instanceof Directory ? 'directory' : 'file',
+      })));
+
+      // If the user selected the parent Media directory,
+      // look for WhatsApp's hidden .Statuses directory.
+      const statusSubFolder = entries.find(
+        (entry) =>
+          entry instanceof Directory &&
+          entry.name === '.Statuses'
+      );
+
+      if (statusSubFolder instanceof Directory) {
+        const statusEntries = statusSubFolder.list();
+
+        fileUris = statusEntries
+          .filter((entry) => !(entry instanceof Directory))
+          .map((entry) => entry.uri);
       } else {
-        fileUris = directFiles;
+        // User selected .Statuses directly.
+        fileUris = entries
+          .filter((entry) => !(entry instanceof Directory))
+          .map((entry) => entry.uri);
       }
+
+      console.log('Status file URIs:', fileUris);
     } catch (e) {
-      console.warn('Failed to read SAF directory:', e);
+      console.error('DIRECTORY READ ERROR:', e);
+      console.error('DIRECTORY URI THAT FAILED:', safUri);
       return { statuses: [], permissionError: true };
     }
 

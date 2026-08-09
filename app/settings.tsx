@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, Switch, Pressable, ScrollView, Platform, Modal, Alert, Image } from 'react-native';
 import { useRouter } from 'expo-router';
-import { StorageAccessFramework } from 'expo-file-system';
+import { Directory } from 'expo-file-system';
 import { 
   ChevronLeft, Download, HardDrive, Bell, Folder, 
   ShieldCheck, Info, Sparkles, ChevronRight, X, Moon, Globe 
@@ -31,29 +31,31 @@ export default function SettingsScreen() {
   const handleGrantFolderAccess = async () => {
     try {
       if (Platform.OS !== 'android') return;
-      
-      if (!StorageAccessFramework) {
-        Alert.alert('Error', 'Storage API is missing on this device.');
-        return;
-      }
 
-      const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
-      
-      if (permissions && permissions.granted && permissions.directoryUri) {
+      const directory = await Directory.pickDirectoryAsync();
+
+      if (directory && directory.uri) {
         const updated = {
           ...settings,
           folderAccessGranted: true,
-          safUri: permissions.directoryUri,
+          safUri: directory.uri,
         };
+
         setSettingsState(updated);
         saveSettings(updated);
         refresh();
+
         Alert.alert('Success', 'Folder access grant ho gaya!');
       } else {
         Alert.alert('Cancelled', 'Aapne folder select nahi kiya.');
       }
     } catch (err: any) {
-      Alert.alert('Error', err.message || 'System folder picker open nahi hua.');
+      console.error('Directory picker error:', err);
+
+      Alert.alert(
+        'Error',
+        err?.message || 'System folder picker open nahi hua.'
+      );
     }
   };
 
