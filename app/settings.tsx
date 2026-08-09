@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, Switch, Pressable, ScrollView, Platform, Modal, Alert } from 'react-native';
+import { StyleSheet, Text, View, Switch, Pressable, ScrollView, Platform, Modal, Alert, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
 import { 
   ChevronLeft, Download, HardDrive, Bell, Folder, 
-  ShieldCheck, Info, Sparkles, ChevronRight, X 
+  ShieldCheck, Info, Sparkles, ChevronRight, X, Moon, Globe 
 } from 'lucide-react-native';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { loadSettings, saveSettings, AppSettings } from '@/lib/settingsService';
 import { useStatuses } from '@/hooks/useStatuses';
+import { radius, spacing } from '@/theme';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -50,19 +51,69 @@ export default function SettingsScreen() {
 
   const savedItems = statuses.filter((item) => item.isSaved);
   const totalBytes = savedItems.reduce((acc, curr) => acc + (curr.fileSizeBytes || 0), 0);
-  const formattedStorage = (totalBytes / (1024 * 1024)).toFixed(1);
+  const formattedStorage = (totalBytes / (1024 * 1024 * 1024)).toFixed(1); // GB calculation
 
   return (
     <ScreenContainer scrollable={false} padded={false}>
+      {/* HEADER */}
       <View style={styles.header}>
         <Pressable style={styles.backBtn} onPress={() => router.back()}>
           <ChevronLeft size={24} color="#FFFFFF" />
         </Pressable>
-        <Text style={styles.headerTitle}>Settings</Text>
+        <View style={styles.headerTitleContainer}>
+            <Text style={styles.headerTitle}>Settings</Text>
+            <Text style={styles.headerSub}>Version 3.2.0 · Premium</Text>
+        </View>
         <View style={{ width: 40 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollBody} showsVerticalScrollIndicator={false}>
+        
+        {/* PRO CARD */}
+        <View style={styles.proCard}>
+          <Image source={require('@/assets/images/icon.png')} style={styles.proLogo} />
+          <View style={styles.proTextCol}>
+             <Text style={styles.proTitle}>W Status Saver</Text>
+             <Text style={styles.proSub}>{savedItems.length} saved · {formattedStorage} GB used</Text>
+          </View>
+          <View style={styles.proBadge}>
+             <Text style={styles.proBadgeText}>PRO</Text>
+          </View>
+        </View>
+
+        {/* APPEARANCE */}
+        <Text style={styles.sectionTitle}>APPEARANCE</Text>
+        <View style={styles.cardGroup}>
+          <View style={styles.cardRow}>
+            <View style={styles.iconBox}>
+              <Moon size={20} color="#3DDC84" />
+            </View>
+            <View style={styles.rowTextCol}>
+              <Text style={styles.itemTitle}>AMOLED black theme</Text>
+              <Text style={styles.itemSub}>True black for deeper contrast</Text>
+            </View>
+            <Switch
+              value={true} // Hardcoded for design
+              onValueChange={() => {}}
+              trackColor={{ false: '#121D18', true: 'rgba(61, 220, 132, 0.4)' }}
+              thumbColor={'#3DDC84'}
+            />
+          </View>
+
+          <View style={styles.divider} />
+
+          <View style={styles.cardRow}>
+            <View style={styles.iconBox}>
+              <Globe size={20} color="#3DDC84" />
+            </View>
+            <View style={styles.rowTextCol}>
+              <Text style={styles.itemTitle}>Language</Text>
+              <Text style={styles.itemSub}>English (device)</Text>
+            </View>
+            <ChevronRight size={18} color="#8D9F96" />
+          </View>
+        </View>
+
         {/* DOWNLOADS */}
         <Text style={styles.sectionTitle}>DOWNLOADS</Text>
         <View style={styles.cardGroup}>
@@ -138,96 +189,7 @@ export default function SettingsScreen() {
           </Pressable>
         </View>
 
-        {/* APP / INFORMATION */}
-        <Text style={styles.sectionTitle}>APP / INFORMATION</Text>
-        <View style={styles.cardGroup}>
-          <Pressable style={styles.cardRow} onPress={() => setPrivacyModalVisible(true)}>
-            <View style={styles.iconBox}>
-              <ShieldCheck size={20} color="#3DDC84" />
-            </View>
-            <View style={styles.rowTextCol}>
-              <Text style={styles.itemTitle}>Privacy Policy</Text>
-              <Text style={styles.itemSub}>Local storage & data policy</Text>
-            </View>
-            <ChevronRight size={18} color="#8D9F96" />
-          </Pressable>
-
-          <View style={styles.divider} />
-
-          <Pressable style={styles.cardRow} onPress={() => setAboutModalVisible(true)}>
-            <View style={styles.iconBox}>
-              <Info size={20} color="#3DDC84" />
-            </View>
-            <View style={styles.rowTextCol}>
-              <Text style={styles.itemTitle}>About W Status Saver</Text>
-              <Text style={styles.itemSub}>Developer info & credits</Text>
-            </View>
-            <ChevronRight size={18} color="#8D9F96" />
-          </Pressable>
-
-          <View style={styles.divider} />
-
-          <View style={styles.cardRow}>
-            <View style={styles.iconBox}>
-              <Sparkles size={20} color="#3DDC84" />
-            </View>
-            <View style={styles.rowTextCol}>
-              <Text style={styles.itemTitle}>App Version</Text>
-            </View>
-            <View style={styles.versionBadge}>
-              <Text style={styles.versionBadgeText}>Latest</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* DATA & STORAGE */}
-        <Text style={styles.sectionTitle}>DATA & STORAGE</Text>
-        <View style={styles.cardGroup}>
-          <View style={styles.cardRow}>
-            <View style={styles.iconBox}>
-              <HardDrive size={20} color="#3DDC84" />
-            </View>
-            <View style={styles.rowTextCol}>
-              <Text style={styles.itemTitle}>Media Storage</Text>
-              <Text style={styles.itemSub}>{savedItems.length} saved items ({formattedStorage} MB total)</Text>
-            </View>
-          </View>
-        </View>
       </ScrollView>
-
-      {/* ABOUT MODAL */}
-      <Modal visible={aboutModalVisible} transparent animationType="fade">
-        <View style={styles.modalBg}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>About W Status Saver</Text>
-              <Pressable onPress={() => setAboutModalVisible(false)}>
-                <X size={20} color="#8D9F96" />
-              </Pressable>
-            </View>
-            <Text style={styles.modalText}>
-              High-performance status utility app for WhatsApp & WhatsApp Business. Save high-definition photos and videos directly to your device gallery.
-            </Text>
-          </View>
-        </View>
-      </Modal>
-
-      {/* PRIVACY MODAL */}
-      <Modal visible={privacyModalVisible} transparent animationType="fade">
-        <View style={styles.modalBg}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Privacy Policy</Text>
-              <Pressable onPress={() => setPrivacyModalVisible(false)}>
-                <X size={20} color="#8D9F96" />
-              </Pressable>
-            </View>
-            <Text style={styles.modalText}>
-              W Status Saver operates with 100% local privacy protection. Personal chats, messages, and contacts are never accessed or uploaded. Storage access permissions are used strictly to read viewed WhatsApp status files.
-            </Text>
-          </View>
-        </View>
-      </Modal>
     </ScreenContainer>
   );
 }
@@ -249,26 +211,76 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  headerTitleContainer: {
+     alignItems: 'center'
+  },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
     color: '#FFFFFF',
   },
+  headerSub: {
+    fontSize: 12,
+    color: '#8D9F96',
+    marginTop: 2
+  },
   scrollBody: {
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 80,
+  },
+  proCard: {
+     flexDirection: 'row',
+     backgroundColor: '#121D18',
+     borderRadius: 24,
+     padding: 16,
+     alignItems: 'center',
+     marginBottom: 10
+  },
+  proLogo: {
+     width: 48,
+     height: 48,
+     borderRadius: 12,
+     marginRight: 14
+  },
+  proTextCol: {
+     flex: 1
+  },
+  proTitle: {
+     fontSize: 16,
+     fontWeight: '700',
+     color: '#FFFFFF',
+     marginBottom: 2
+  },
+  proSub: {
+     fontSize: 13,
+     color: '#8D9F96'
+  },
+  proBadge: {
+     backgroundColor: 'rgba(61, 220, 132, 0.1)',
+     paddingHorizontal: 10,
+     paddingVertical: 4,
+     borderRadius: 8,
+     borderWidth: 1,
+     borderColor: 'rgba(61, 220, 132, 0.3)'
+  },
+  proBadgeText: {
+     color: '#3DDC84',
+     fontWeight: '700',
+     fontSize: 11,
+     letterSpacing: 0.5
   },
   sectionTitle: {
     fontSize: 12,
     fontWeight: '700',
     color: '#8D9F96',
     letterSpacing: 1,
-    marginTop: 18,
-    marginBottom: 8,
+    marginTop: 20,
+    marginBottom: 10,
+    paddingHorizontal: 4
   },
   cardGroup: {
     backgroundColor: '#121D18',
-    borderRadius: 20,
+    borderRadius: 24,
     overflow: 'hidden',
   },
   cardRow: {
@@ -294,7 +306,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   itemSub: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#8D9F96',
     marginTop: 2,
   },
@@ -313,42 +325,5 @@ const styles = StyleSheet.create({
     color: '#3DDC84',
     fontSize: 13,
     fontWeight: '600',
-  },
-  versionBadge: {
-    backgroundColor: '#1E2C26',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  versionBadgeText: {
-    color: '#8D9F96',
-    fontSize: 12,
-  },
-  modalBg: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  modalContent: {
-    backgroundColor: '#121D18',
-    borderRadius: 20,
-    padding: 20,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 14,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  modalText: {
-    fontSize: 14,
-    color: '#8D9F96',
-    lineHeight: 22,
   },
 });

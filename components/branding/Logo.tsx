@@ -16,10 +16,11 @@ export function Logo({ size = 40, glow = false }: LogoProps) {
           {
             width: size,
             height: size,
-            borderRadius: size / 4,
+            borderRadius: size / 2, // Circular to hide square edges
+            backgroundColor: 'transparent'
           },
         ]}
-        resizeMode="contain"
+        resizeMode="cover"
       />
     </View>
   );
