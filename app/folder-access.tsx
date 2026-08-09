@@ -1,5 +1,5 @@
-import React from 'react';
-import { StyleSheet, Text, View, Pressable, Platform, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, Pressable, Platform, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
 import { Folder, EyeOff, HardDrive, Check } from 'lucide-react-native';
@@ -9,13 +9,16 @@ import { loadSettings, saveSettings } from '@/lib/settingsService';
 
 export default function FolderAccessScreen() {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   const handleAllowAccess = async () => {
+    if (loading) return;
+    setLoading(true);
+
     try {
       const StorageAccessFramework = (FileSystem as any).StorageAccessFramework;
       if (Platform.OS === 'android' && StorageAccessFramework) {
-        // Request directory permission without passing hardcoded invalid sub-path
-        const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
+        const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync().catch(() => null);
         
         if (permissions && permissions.granted && permissions.directoryUri) {
           const curr = loadSettings();
@@ -25,15 +28,16 @@ export default function FolderAccessScreen() {
             safUri: permissions.directoryUri,
             onboardingCompleted: true,
           });
+          setLoading(false);
           router.replace('/home');
           return;
         }
       }
-    } catch (err: any) {
-      console.warn('SAF request error:', err);
+    } catch (e) {
+      console.warn('Picker error:', e);
     }
 
-    // Fallback URI for primary storage in case picker is suppressed by OS
+    // Direct fallback navigation so app never hangs or stays frozen
     const curr = loadSettings();
     saveSettings({
       ...curr,
@@ -41,6 +45,7 @@ export default function FolderAccessScreen() {
       safUri: 'content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fmedia%2Fcom.whatsapp%2FWhatsApp%2FMedia%2F.Statuses',
       onboardingCompleted: true,
     });
+    setLoading(false);
     router.replace('/home');
   };
 
@@ -105,10 +110,22 @@ export default function FolderAccessScreen() {
 
         {/* ACTIONS */}
         <View style={styles.bottomSection}>
-          <Pressable style={styles.allowButton} onPress={handleAllowAccess}>
-            <Text style={styles.allowBtnText}>Allow access</Text>
+          <Pressable 
+            style={({ pressed }) => [styles.allowButton, pressed && { opacity: 0.8 }]} 
+            onPress={handleAllowAccess}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#0A0F0D" />
+            ) : (
+              <Text style={styles.allowBtnText}>Allow access</Text>
+            )}
           </Pressable>
-          <Pressable style={styles.notNowButton} onPress={handleNotNow}>
+          <Pressable 
+            style={({ pressed }) => [styles.notNowButton, pressed && { opacity: 0.8 }]} 
+            onPress={handleNotNow}
+            disabled={loading}
+          >
             <Text style={styles.notNowText}>Not now</Text>
           </Pressable>
         </View>
@@ -188,6 +205,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 28,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   allowBtnText: {
     color: '#0A0F0D',
