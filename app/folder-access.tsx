@@ -1,4 +1,5 @@
-import { Alert, Pressable, StyleSheet, Text, View, Platform } from 'react-native';
+import React from 'react';
+import { StyleSheet, Text, View, Pressable, Platform, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
 import { Folder, EyeOff, HardDrive, Check } from 'lucide-react-native';
@@ -15,9 +16,7 @@ export default function FolderAccessScreen() {
 
     if (Platform.OS === 'android' && StorageAccessFramework) {
       try {
-        // First try requesting directory permission directly from system file picker
         const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
-        
         if (permissions.granted && permissions.directoryUri) {
           const curr = loadSettings();
           saveSettings({
@@ -28,21 +27,19 @@ export default function FolderAccessScreen() {
           });
           router.replace('/home');
           return;
-        } else {
-          Alert.alert('Permission Required', 'You need to select a folder and tap "USE THIS FOLDER" to grant access.');
-          return;
         }
-      } catch (err: any) {
-        console.warn('SAF folder selection error:', err);
+      } catch (err) {
+        console.warn('SAF directory picker error:', err);
       }
     }
 
+    // Direct system picker retry if cancelled
     Alert.alert(
-      'Storage Access Required',
-      'Please select your WhatsApp or Media folder in the system picker and tap "USE THIS FOLDER" at the bottom.',
+      'Storage Permission Needed',
+      'Please select your WhatsApp or Media folder in the file picker and tap "USE THIS FOLDER" to show statuses.',
       [
         {
-          text: 'Try Again',
+          text: 'Open Picker',
           onPress: () => handleAllowAccess(),
         },
         { text: 'Cancel', style: 'cancel' },
@@ -62,9 +59,10 @@ export default function FolderAccessScreen() {
   return (
     <ScreenContainer scrollable={false} padded={false}>
       <View style={styles.container}>
+        {/* HEADER SECTION */}
         <View style={styles.headerSection}>
-          <View style={styles.logoGlowRing}>
-            <Logo size={88} glow={true} />
+          <View style={styles.logoRing}>
+            <Logo size={90} glow={true} />
           </View>
           <Text style={styles.titleText}>Allow folder access</Text>
           <Text style={styles.descText}>
@@ -72,6 +70,7 @@ export default function FolderAccessScreen() {
           </Text>
         </View>
 
+        {/* CARDS LIST */}
         <View style={styles.cardsGroup}>
           <View style={styles.cardItem}>
             <View style={styles.iconCircle}>
@@ -101,18 +100,19 @@ export default function FolderAccessScreen() {
             </View>
             <View style={styles.cardTextCol}>
               <Text style={styles.cardTitle}>Saves stay local</Text>
-              <Text style={styles.cardSub}>Your media never leaves your phone.</Text>
+              <Text style={styles.cardSub}>Downloads go to your gallery, offline.</Text>
             </View>
             <Check size={20} color="#3DDC84" strokeWidth={2.5} />
           </View>
         </View>
 
+        {/* BOTTOM BUTTONS */}
         <View style={styles.bottomSection}>
           <Pressable style={styles.allowButton} onPress={handleAllowAccess}>
-            <Text style={styles.allowBtnText}>Grant Access</Text>
+            <Text style={styles.allowBtnText}>Allow access</Text>
           </Pressable>
           <Pressable style={styles.notNowButton} onPress={handleNotNow}>
-            <Text style={styles.notNowText}>Not Now</Text>
+            <Text style={styles.notNowText}>Not now</Text>
           </Pressable>
         </View>
       </View>
@@ -131,9 +131,9 @@ const styles = StyleSheet.create({
   },
   headerSection: {
     alignItems: 'center',
-    marginTop: spacing.md,
+    marginTop: spacing.sm,
   },
-  logoGlowRing: {
+  logoRing: {
     marginBottom: spacing.md,
   },
   titleText: {
@@ -147,10 +147,10 @@ const styles = StyleSheet.create({
     color: '#A0AEA6',
     textAlign: 'center',
     lineHeight: 20,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.xs,
   },
   cardsGroup: {
-    gap: spacing.sm,
+    gap: spacing.md,
     marginVertical: spacing.md,
   },
   cardItem: {
@@ -162,10 +162,10 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   iconCircle: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(61, 220, 132, 0.1)',
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: 'rgba(61, 220, 132, 0.08)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -183,12 +183,13 @@ const styles = StyleSheet.create({
     color: '#8D9F96',
   },
   bottomSection: {
-    gap: spacing.xs,
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
   },
   allowButton: {
     backgroundColor: '#3DDC84',
-    paddingVertical: 14,
-    borderRadius: radius.md,
+    paddingVertical: 16,
+    borderRadius: radius.xl,
     alignItems: 'center',
   },
   allowBtnText: {
@@ -197,7 +198,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   notNowButton: {
-    paddingVertical: 12,
+    paddingVertical: 10,
     alignItems: 'center',
   },
   notNowText: {

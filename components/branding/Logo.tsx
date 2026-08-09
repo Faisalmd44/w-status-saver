@@ -6,7 +6,7 @@ interface LogoProps {
   glow?: boolean;
 }
 
-export function Logo({ size = 80, glow = false }: LogoProps) {
+export function Logo({ size = 40, glow = false }: LogoProps) {
   return (
     <View style={styles.container}>
       <Image
