@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, Pressable, Platform, ActivityIndicator } from 'react-native';
+import { StyleSheet, Text, View, Pressable, Platform, ActivityIndicator, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
 import { Folder, EyeOff, HardDrive, Check } from 'lucide-react-native';
@@ -17,8 +17,10 @@ export default function FolderAccessScreen() {
 
     try {
       const StorageAccessFramework = (FileSystem as any).StorageAccessFramework;
+      
       if (Platform.OS === 'android' && StorageAccessFramework) {
-        const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync().catch(() => null);
+        // Open native Android system file picker
+        const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
         
         if (permissions && permissions.granted && permissions.directoryUri) {
           const curr = loadSettings();
@@ -31,22 +33,24 @@ export default function FolderAccessScreen() {
           setLoading(false);
           router.replace('/home');
           return;
+        } else {
+          // User cancelled the picker
+          setLoading(false);
+          return;
         }
       }
-    } catch (e) {
-      console.warn('Picker error:', e);
+    } catch (e: any) {
+      console.warn('SAF Picker error:', e);
+      setLoading(false);
+      Alert.alert(
+        'Folder Access Required',
+        'Please select your WhatsApp Media folder in the system file picker to grant permission.',
+        [{ text: 'OK' }]
+      );
+      return;
     }
 
-    // Direct fallback navigation so app never hangs or stays frozen
-    const curr = loadSettings();
-    saveSettings({
-      ...curr,
-      folderAccessGranted: true,
-      safUri: 'content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fmedia%2Fcom.whatsapp%2FWhatsApp%2FMedia%2F.Statuses',
-      onboardingCompleted: true,
-    });
     setLoading(false);
-    router.replace('/home');
   };
 
   const handleNotNow = () => {
