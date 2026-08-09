@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, Pressable, Platform, Alert } from 'react-native';
+import { StyleSheet, Text, View, Pressable, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
 import { Folder, EyeOff, HardDrive, Check } from 'lucide-react-native';
@@ -12,27 +12,24 @@ export default function FolderAccessScreen() {
 
   const handleAllowAccess = async () => {
     try {
-      const StorageAccessFramework = (FileSystem as any).StorageAccessFramework;
+      const { StorageAccessFramework } = FileSystem;
+      // Sidha native Android system picker ko call karega
+      const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
       
-      if (Platform.OS === 'android' && StorageAccessFramework) {
-        const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
-        
-        if (permissions && permissions.granted && permissions.directoryUri) {
-          const curr = loadSettings();
-          saveSettings({
-            ...curr,
-            folderAccessGranted: true,
-            safUri: permissions.directoryUri,
-            onboardingCompleted: true,
-          });
-          router.replace('/home');
-        }
+      if (permissions.granted && permissions.directoryUri) {
+        const curr = loadSettings();
+        saveSettings({
+          ...curr,
+          folderAccessGranted: true,
+          safUri: permissions.directoryUri,
+          onboardingCompleted: true,
+        });
+        router.replace('/home');
+      } else {
+        Alert.alert('Cancelled', 'Aapne folder select nahi kiya. Please "Use this folder" par tap karein.');
       }
     } catch (e: any) {
-      Alert.alert(
-        'System Action Blocked',
-        'Your phone restricted the folder picker. Try again or check app permissions.'
-      );
+      Alert.alert('System Error', e.message || 'File picker open nahi ho paya.');
     }
   };
 

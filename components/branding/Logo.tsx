@@ -8,18 +8,13 @@ interface LogoProps {
 
 export function Logo({ size = 40, glow = false }: LogoProps) {
   return (
-    <View style={styles.container}>
+    <View style={[
+      styles.container,
+      { width: size, height: size, borderRadius: size / 2 }
+    ]}>
       <Image
         source={require('@/assets/images/icon.png')}
-        style={[
-          styles.logo,
-          {
-            width: size,
-            height: size,
-            borderRadius: size / 2, // Circular to hide square edges
-            backgroundColor: 'transparent'
-          },
-        ]}
+        style={{ width: '100%', height: '100%' }}
         resizeMode="cover"
       />
     </View>
@@ -30,8 +25,7 @@ const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  logo: {
     overflow: 'hidden',
+    backgroundColor: '#0A0F0D',
   },
 });

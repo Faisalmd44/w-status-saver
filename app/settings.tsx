@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, Switch, Pressable, ScrollView, Platform, Modal, Alert, Image } from 'react-native';
+import { StyleSheet, Text, View, Switch, Pressable, ScrollView, Modal, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as FileSystem from 'expo-file-system';
 import { 
@@ -9,7 +9,7 @@ import {
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { loadSettings, saveSettings, AppSettings } from '@/lib/settingsService';
 import { useStatuses } from '@/hooks/useStatuses';
-import { radius, spacing } from '@/theme';
+import { Logo } from '@/components/branding/Logo';
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -30,48 +30,51 @@ export default function SettingsScreen() {
 
   const handleGrantFolderAccess = async () => {
     try {
-      const StorageAccessFramework = (FileSystem as any).StorageAccessFramework;
-      if (Platform.OS === 'android' && StorageAccessFramework) {
-        const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
-        if (permissions && permissions.granted && permissions.directoryUri) {
-          const updated = {
-            ...settings,
-            folderAccessGranted: true,
-            safUri: permissions.directoryUri,
-          };
-          setSettingsState(updated);
-          saveSettings(updated);
-          refresh();
-        }
+      const { StorageAccessFramework } = FileSystem;
+      const permissions = await StorageAccessFramework.requestDirectoryPermissionsAsync();
+      if (permissions.granted && permissions.directoryUri) {
+        const updated = {
+          ...settings,
+          folderAccessGranted: true,
+          safUri: permissions.directoryUri,
+        };
+        setSettingsState(updated);
+        saveSettings(updated);
+        refresh();
+        Alert.alert('Success', 'Folder access grant ho gaya!');
+      } else {
+        Alert.alert('Cancelled', 'Aapne folder select nahi kiya.');
       }
     } catch (err: any) {
-      Alert.alert('Notice', 'System folder picker cancelled or closed.');
+      Alert.alert('Error', err.message || 'System folder picker open nahi hua.');
     }
   };
 
   const savedItems = statuses.filter((item) => item.isSaved);
   const totalBytes = savedItems.reduce((acc, curr) => acc + (curr.fileSizeBytes || 0), 0);
-  const formattedStorage = (totalBytes / (1024 * 1024 * 1024)).toFixed(1); // GB calculation
+  const formattedStorage = (totalBytes / (1024 * 1024 * 1024)).toFixed(1);
 
   return (
     <ScreenContainer scrollable={false} padded={false}>
-      {/* HEADER */}
-      <View style={styles.header}>
-        <Pressable style={styles.backBtn} onPress={() => router.back()}>
-          <ChevronLeft size={24} color="#FFFFFF" />
-        </Pressable>
-        <View style={styles.headerTitleContainer}>
-            <Text style={styles.headerTitle}>Settings</Text>
-            <Text style={styles.headerSub}>Version 3.2.0 · Premium</Text>
-        </View>
-        <View style={{ width: 40 }} />
-      </View>
-
       <ScrollView contentContainerStyle={styles.scrollBody} showsVerticalScrollIndicator={false}>
         
+        {/* ROUNDED HEADER CARD (Floating Pill) */}
+        <View style={styles.topHeaderCard}>
+          <Pressable style={styles.backBtn} onPress={() => router.back()}>
+            <ChevronLeft size={24} color="#FFFFFF" />
+          </Pressable>
+          <View style={styles.headerTitleContainer}>
+              <Text style={styles.headerTitle}>Settings</Text>
+              <Text style={styles.headerSub}>Version 3.2.0 · Premium</Text>
+          </View>
+          <View style={{ width: 44 }} />
+        </View>
+
         {/* PRO CARD */}
         <View style={styles.proCard}>
-          <Image source={require('@/assets/images/icon.png')} style={styles.proLogo} />
+          <View style={{ marginRight: 14 }}>
+            <Logo size={48} />
+          </View>
           <View style={styles.proTextCol}>
              <Text style={styles.proTitle}>W Status Saver</Text>
              <Text style={styles.proSub}>{savedItems.length} saved · {formattedStorage} GB used</Text>
@@ -93,7 +96,7 @@ export default function SettingsScreen() {
               <Text style={styles.itemSub}>True black for deeper contrast</Text>
             </View>
             <Switch
-              value={true} // Hardcoded for design
+              value={true}
               onValueChange={() => {}}
               trackColor={{ false: '#121D18', true: 'rgba(61, 220, 132, 0.4)' }}
               thumbColor={'#3DDC84'}
@@ -195,24 +198,34 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+  scrollBody: {
+    padding: 16,
+    paddingTop: 10,
+    paddingBottom: 80,
     backgroundColor: '#0A0F0D',
   },
-  backBtn: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+  topHeaderCard: {
+    flexDirection: 'row',
     backgroundColor: '#121D18',
+    borderRadius: 100, // Fully rounded pill shape
+    padding: 8,
+    paddingRight: 16,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    marginTop: 8, // Detached from top
+  },
+  backBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitleContainer: {
-     alignItems: 'center'
+     alignItems: 'center',
+     flex: 1,
   },
   headerTitle: {
     fontSize: 18,
@@ -224,10 +237,6 @@ const styles = StyleSheet.create({
     color: '#8D9F96',
     marginTop: 2
   },
-  scrollBody: {
-    padding: 16,
-    paddingBottom: 80,
-  },
   proCard: {
      flexDirection: 'row',
      backgroundColor: '#121D18',
@@ -235,12 +244,6 @@ const styles = StyleSheet.create({
      padding: 16,
      alignItems: 'center',
      marginBottom: 10
-  },
-  proLogo: {
-     width: 48,
-     height: 48,
-     borderRadius: 12,
-     marginRight: 14
   },
   proTextCol: {
      flex: 1
