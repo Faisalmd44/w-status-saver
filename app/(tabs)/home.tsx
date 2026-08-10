@@ -10,9 +10,6 @@ import { useStatuses } from '@/hooks/useStatuses';
 import { StatusMetadataItem } from '@/lib/statusService';
 import { Logo } from '@/components/branding/Logo';
 
-// FIX: Stylish Display Names for Contacts
-const DISPLAY_NAMES = ['Ayesha', 'Rahul', 'Design', 'Sana', 'Trek', 'Amit', 'Priya', 'Neha'];
-
 export default function HomeScreen() {
   const { colors } = useTheme();
   const router = useRouter();
@@ -64,8 +61,9 @@ export default function HomeScreen() {
         contactMap.get(s.sender).count += 1;
       }
     });
-    return Array.from(contactMap.values()).slice(0, 8).map((c, i) => ({
-      ...c, name: DISPLAY_NAMES[i % DISPLAY_NAMES.length] // Assign stylish short name
+    return Array.from(contactMap.entries()).slice(0, 8).map(([sender, c]) => ({
+      ...c,
+      name: sender,
     }));
   }, [statuses]);
 
@@ -167,7 +165,7 @@ export default function HomeScreen() {
             {filteredStatuses.map((item, index) => {
               const isVideo = item.type === 'video' || item.uri.toLowerCase().endsWith('.mp4');
               const sizeLabel = item.fileSizeBytes ? (item.fileSizeBytes / (1024 * 1024)).toFixed(1) + ' MB' : '0.1 MB';
-              const displayName = DISPLAY_NAMES[index % DISPLAY_NAMES.length];
+              const displayName = item.sender;
 
               return (
                 <Pressable key={item.id} style={styles.mediaCard} onPress={() => setSelectedStatus(item)}>
