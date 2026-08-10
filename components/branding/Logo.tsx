@@ -30,10 +30,11 @@ export function Logo({
       <Image
         source={require('@/assets/images/icon.png')}
         style={{
-          width: '130%',
-          height: '130%',
-          marginLeft: '-15%',
-          marginTop: '-15%',
+          position: 'absolute',
+          width: '140%',
+          height: '140%',
+          left: '-20%',
+          top: '-20%',
         }}
         resizeMode="cover"
       />
