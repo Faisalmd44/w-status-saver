@@ -1,4 +1,4 @@
-import { safeCustomStorage } from './supabase';
+import * as SecureStore from 'expo-secure-store';
 
 export interface AppSettings {
   amoledTheme: boolean;
@@ -28,20 +28,51 @@ const SETTINGS_KEY = 'w_status_saver_app_settings';
 
 export function loadSettings(): AppSettings {
   try {
-    const raw = safeCustomStorage.getItem(SETTINGS_KEY);
+    const raw = SecureStore.getItem(SETTINGS_KEY);
+
     if (raw) {
       const parsed = JSON.parse(raw);
       return { ...DEFAULT_SETTINGS, ...parsed };
     }
-  } catch {
-    // fallback
+  } catch (err) {
+    console.warn('Failed to load settings:', err);
   }
+
+  return DEFAULT_SETTINGS;
+}
+
+export async function loadSettingsAsync(): Promise<AppSettings> {
+  try {
+    const raw = await SecureStore.getItemAsync(SETTINGS_KEY);
+
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      return { ...DEFAULT_SETTINGS, ...parsed };
+    }
+  } catch (err) {
+    console.warn('Failed to load settings:', err);
+  }
+
   return DEFAULT_SETTINGS;
 }
 
 export function saveSettings(settings: AppSettings): void {
   try {
-    safeCustomStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    SecureStore.setItem(
+      SETTINGS_KEY,
+      JSON.stringify(settings)
+    );
+  } catch (err) {
+    console.warn('Failed to save settings:', err);
+  }
+}
+
+export async function saveSettingsAsync(settings: AppSettings): Promise<void> {
+  try {
+    await SecureStore.setItemAsync(
+      SETTINGS_KEY,
+      JSON.stringify(settings)
+    );
   } catch (err) {
     console.warn('Failed to save settings:', err);
   }

@@ -2,14 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
-  StatusMetadataItem,
-  loadFavoritesSet,
-  loadSavedRecords,
-  saveFavoritesSet,
-  scanWhatsAppStatuses,
-  saveStatusCopy,
-  deleteSavedStatusCopy,
-  processAutoSave,
+  StatusMetadataItem, loadFavoritesSet, loadSavedRecords, saveFavoritesSet,
+  scanWhatsAppStatuses, saveStatusCopy, deleteSavedStatusCopy, processAutoSave,
 } from '@/lib/statusService';
 import { loadSettings, saveSettings } from '@/lib/settingsService';
 
@@ -24,19 +18,11 @@ export function useStatuses() {
     const favSet = loadFavoritesSet();
 
     const savedItems: StatusMetadataItem[] = savedRecords.map((rec) => ({
-      id: rec.id,
-      type: rec.type,
-      uri: rec.savedUri,
-      savedUri: rec.savedUri,
-      mediaLibraryAssetId: rec.mediaLibraryAssetId,
-      sender: rec.sender,
-      time: rec.time,
-      isSaved: true,
-      isFavorite: favSet.has(rec.id),
-      fileSizeBytes: rec.fileSizeBytes,
+      id: rec.id, type: rec.type, uri: rec.savedUri, savedUri: rec.savedUri,
+      mediaLibraryAssetId: rec.mediaLibraryAssetId, sender: rec.sender, time: rec.time,
+      isSaved: true, isFavorite: favSet.has(rec.id), fileSizeBytes: rec.fileSizeBytes,
       modifiedTimestamp: rec.savedAt,
     }));
-
     setSavedStatuses(savedItems);
   }, []);
 
@@ -45,33 +31,19 @@ export function useStatuses() {
     const settings = loadSettings();
 
     if (!settings.folderAccessGranted || !settings.safUri) {
-      setStatuses([]);
-      syncSavedList();
-      setIsLoading(false);
+      setStatuses([]); syncSavedList(); setIsLoading(false);
       return;
     }
 
-    const { statuses: scanned, permissionError } = await scanWhatsAppStatuses(
-      settings.safUri
-    );
+    const { statuses: scanned, permissionError } = await scanWhatsAppStatuses(settings.safUri);
 
+    // FIX: Removed aggressive redirect logic. If permission fails temporarily, we just show empty states, not loop.
     if (permissionError) {
-      // SAF Permission lost or revoked - send user to folder access screen
-      saveSettings({
-        ...settings,
-        folderAccessGranted: false,
-        safUri: '',
-      });
-      setStatuses([]);
-      syncSavedList();
-      setIsLoading(false);
-      router.replace('/folder-access');
+      setStatuses([]); syncSavedList(); setIsLoading(false);
       return;
     }
 
     let finalScanned = scanned;
-
-    // Process auto-save if setting enabled
     if (settings.autoSave && scanned.length > 0) {
       finalScanned = await processAutoSave(scanned);
     }
@@ -79,47 +51,29 @@ export function useStatuses() {
     setStatuses(finalScanned);
     syncSavedList();
     setIsLoading(false);
-  }, [router, syncSavedList]);
+  }, [syncSavedList]);
 
   useEffect(() => {
     let isMounted = true;
-
     const executeScan = async () => {
       setIsLoading(true);
       const settings = loadSettings();
 
       if (!settings.folderAccessGranted || !settings.safUri) {
-        if (isMounted) {
-          setStatuses([]);
-          syncSavedList();
-          setIsLoading(false);
-        }
+        if (isMounted) { setStatuses([]); syncSavedList(); setIsLoading(false); }
         return;
       }
 
-      const { statuses: scanned, permissionError } = await scanWhatsAppStatuses(
-        settings.safUri
-      );
-
+      const { statuses: scanned, permissionError } = await scanWhatsAppStatuses(settings.safUri);
       if (!isMounted) return;
 
+      // FIX: Removed aggressive redirect logic here as well.
       if (permissionError) {
-        saveSettings({
-          ...settings,
-          folderAccessGranted: false,
-          safUri: '',
-        });
-        if (isMounted) {
-          setStatuses([]);
-          syncSavedList();
-          setIsLoading(false);
-        }
-        router.replace('/folder-access');
+        if (isMounted) { setStatuses([]); syncSavedList(); setIsLoading(false); }
         return;
       }
 
       let finalScanned = scanned;
-
       if (settings.autoSave && scanned.length > 0) {
         finalScanned = await processAutoSave(scanned);
       }
@@ -132,144 +86,66 @@ export function useStatuses() {
     };
 
     executeScan();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [router, syncSavedList]);
+    return () => { isMounted = false; };
+  }, [syncSavedList]);
 
   const toggleSave = useCallback(
     async (idOrItem: string | StatusMetadataItem) => {
-      let targetItem: StatusMetadataItem | undefined;
-      if (typeof idOrItem === 'string') {
-        targetItem =
-          statuses.find((s) => s.id === idOrItem) ||
-          savedStatuses.find((s) => s.id === idOrItem);
-      } else {
-        targetItem = idOrItem;
-      }
-
+      let targetItem = typeof idOrItem === 'string'
+          ? statuses.find((s) => s.id === idOrItem) || savedStatuses.find((s) => s.id === idOrItem)
+          : idOrItem;
       if (!targetItem) return;
 
       if (!targetItem.isSaved) {
-        // SAVE STATUS
         try {
           const record = await saveStatusCopy(targetItem);
-          setStatuses((prev) =>
-            prev.map((item) =>
-              item.id === targetItem!.id
-                ? {
-                    ...item,
-                    isSaved: true,
-                    savedUri: record.savedUri,
-                    mediaLibraryAssetId: record.mediaLibraryAssetId,
-                  }
-                : item
-            )
-          );
+          setStatuses((prev) => prev.map((item) => item.id === targetItem!.id ? { ...item, isSaved: true, savedUri: record.savedUri, mediaLibraryAssetId: record.mediaLibraryAssetId } : item ));
           syncSavedList();
-        } catch (err) {
-          Alert.alert('Save Failed', 'Could not copy status to saved gallery.');
-        }
+        } catch (err) { Alert.alert('Save Failed', 'Could not copy status to saved gallery.'); }
       } else {
-        // PROMPT DELETE CONFIRMATION BEFORE DELETING SAVED COPY
-        Alert.alert(
-          'Delete saved status?',
-          'Remove this saved copy from W Status Saver? The original WhatsApp status will not be affected.',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            {
-              text: 'Delete',
-              style: 'destructive',
-              onPress: async () => {
-                await deleteSavedStatusCopy(targetItem!);
-                setStatuses((prev) =>
-                  prev.map((item) =>
-                    item.id === targetItem!.id
-                      ? { ...item, isSaved: false, savedUri: undefined }
-                      : item
-                  )
-                );
-                syncSavedList();
-              },
-            },
-          ]
-        );
+        Alert.alert('Delete saved status?', 'Remove this saved copy from W Status Saver?', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Delete', style: 'destructive', onPress: async () => {
+              await deleteSavedStatusCopy(targetItem!);
+              setStatuses((prev) => prev.map((item) => item.id === targetItem!.id ? { ...item, isSaved: false, savedUri: undefined } : item ));
+              syncSavedList();
+            }
+          }
+        ]);
       }
-    },
-    [statuses, savedStatuses, syncSavedList]
+    }, [statuses, savedStatuses, syncSavedList]
   );
 
   const confirmAndDeleteSaved = useCallback(
     (item: StatusMetadataItem, onSuccess?: () => void) => {
-      Alert.alert(
-        'Delete saved status?',
-        'Remove this saved copy from W Status Saver? The original WhatsApp status will not be affected.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete',
-            style: 'destructive',
-            onPress: async () => {
-              await deleteSavedStatusCopy(item);
-              setStatuses((prev) =>
-                prev.map((s) =>
-                  s.id === item.id ? { ...s, isSaved: false, savedUri: undefined } : s
-                )
-              );
-              syncSavedList();
-              if (onSuccess) onSuccess();
-            },
-          },
-        ]
-      );
-    },
-    [syncSavedList]
+      Alert.alert('Delete saved status?', 'Remove this saved copy from W Status Saver?', [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: async () => {
+            await deleteSavedStatusCopy(item);
+            setStatuses((prev) => prev.map((s) => s.id === item.id ? { ...s, isSaved: false, savedUri: undefined } : s ));
+            syncSavedList();
+            if (onSuccess) onSuccess();
+          }
+        }
+      ]);
+    }, [syncSavedList]
   );
 
   const toggleFavorite = useCallback((id: string) => {
     const favSet = loadFavoritesSet();
     const isFav = favSet.has(id);
-    if (isFav) {
-      favSet.delete(id);
-    } else {
-      favSet.add(id);
-    }
+    if (isFav) { favSet.delete(id); } else { favSet.add(id); }
     saveFavoritesSet(favSet);
-
-    setStatuses((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, isFavorite: !isFav } : item
-      )
-    );
-    setSavedStatuses((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, isFavorite: !isFav } : item
-      )
-    );
+    setStatuses((prev) => prev.map((item) => item.id === id ? { ...item, isFavorite: !isFav } : item ));
+    setSavedStatuses((prev) => prev.map((item) => item.id === id ? { ...item, isFavorite: !isFav } : item ));
   }, []);
 
   const saveAll = useCallback(async () => {
     const unsaved = statuses.filter((s) => !s.isSaved);
-    for (const item of unsaved) {
-      try {
-        await saveStatusCopy(item);
-      } catch (err) {
-        console.warn('Save all error for item:', item.id, err);
-      }
-    }
+    for (const item of unsaved) { try { await saveStatusCopy(item); } catch (err) {} }
     setStatuses((prev) => prev.map((item) => ({ ...item, isSaved: true })));
     syncSavedList();
   }, [statuses, syncSavedList]);
 
-  return {
-    statuses,
-    savedStatuses,
-    isLoading,
-    refresh: scanFolder,
-    toggleSave,
-    confirmAndDeleteSaved,
-    toggleFavorite,
-    saveAll,
-  };
+  return { statuses, savedStatuses, isLoading, refresh: scanFolder, toggleSave, confirmAndDeleteSaved, toggleFavorite, saveAll };
 }

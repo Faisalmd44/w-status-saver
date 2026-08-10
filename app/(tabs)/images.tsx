@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useState, useEffect, useRef } from 'react';
+import { Image, Pressable, StyleSheet, Text, View, Animated } from 'react-native';
 import { Download, Heart, Check, FolderSearch } from 'lucide-react-native';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { AppBar } from '@/components/ui/AppBar';
@@ -16,12 +16,22 @@ export default function ImagesScreen() {
   const { statuses, toggleSave, toggleFavorite } = useStatuses();
   const [selectedStatus, setSelectedStatus] = useState<StatusMetadataItem | null>(null);
 
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 600, useNativeDriver: true })
+    ]).start();
+  }, []);
+
   const imageStatuses = statuses.filter((item) => item.type === 'image');
 
   return (
-    <ScreenContainer scrollable padded={false} fadingEdgeLength={150}>
-      <AppBar title="Image Statuses" subtitle={`${imageStatuses.length} photo statuses available`} centerTitle />
-      <View style={styles.body}>
+    <ScreenContainer scrollable padded={false}>
+      <Animated.View style={[styles.body, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+        <AppBar title="Image Statuses" subtitle={`${imageStatuses.length} photo statuses available`} centerTitle />
         {imageStatuses.length === 0 ? (
           <Card style={styles.emptyCard}>
             <FolderSearch size={44} color="#3DDC84" />
@@ -51,18 +61,18 @@ export default function ImagesScreen() {
             ))}
           </View>
         )}
-      </View>
+      </Animated.View>
       <StatusViewerModal status={selectedStatus} visible={!!selectedStatus} onClose={() => setSelectedStatus(null)} onToggleSave={toggleSave} onToggleFavorite={toggleFavorite} />
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  body: { paddingHorizontal: spacing[4], paddingTop: spacing[4] },
-  emptyCard: { padding: spacing[8], alignItems: 'center', justifyContent: 'center', gap: spacing[2] },
+  body: { paddingHorizontal: spacing[4], paddingTop: spacing[4], paddingBottom: 40 },
+  emptyCard: { padding: spacing[8], alignItems: 'center', justifyContent: 'center', gap: spacing[2], marginTop: 10 },
   emptyTitle: { color: '#FFFFFF', fontSize: 18, fontWeight: '700', marginTop: 4 },
   emptySubtitle: { color: '#8D9F96', fontSize: 14, textAlign: 'center' },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[3] },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing[3], marginTop: 10 },
   gridCard: { width: '47.5%' },
   imageWrapper: { height: 180, width: '100%', position: 'relative', backgroundColor: '#1E2B22' },
   thumbnail: { width: '100%', height: '100%', resizeMode: 'cover' },

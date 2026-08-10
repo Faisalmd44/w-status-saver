@@ -1,9 +1,7 @@
-import { useState, useMemo } from 'react';
-import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View, Switch } from 'react-native';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { Image, Pressable, RefreshControl, ScrollView, StyleSheet, Text, TextInput, View, Switch, Animated } from 'react-native';
 import { useRouter } from 'expo-router';
-import {
-  Download, Heart, Play, RefreshCw, Check, Search, Settings, X, FolderSearch, Flame, HardDrive, MessageSquarePlus, Share2, ShieldCheck
-} from 'lucide-react-native';
+import { Download, Heart, Play, RefreshCw, Check, Search, Settings, X, FolderSearch, Flame, HardDrive, MessageSquarePlus, Share2, ShieldCheck } from 'lucide-react-native';
 import { ScreenContainer } from '@/components/ui/ScreenContainer';
 import { StatusViewerModal } from '@/components/ui/StatusViewerModal';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -12,17 +10,31 @@ import { useStatuses } from '@/hooks/useStatuses';
 import { StatusMetadataItem } from '@/lib/statusService';
 import { Logo } from '@/components/branding/Logo';
 
+// FIX: Stylish Display Names for Contacts
+const DISPLAY_NAMES = ['Ayesha', 'Rahul', 'Design', 'Sana', 'Trek', 'Amit', 'Priya', 'Neha'];
+
 export default function HomeScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const { statuses, savedStatuses, toggleSave, toggleFavorite, refresh } = useStatuses();
-  
+
   const [activeFilter, setActiveFilter] = useState<'all' | 'image' | 'video'>('all');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<StatusMetadataItem | null>(null);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+
+  // FIX: Entrance Animation (Fade + Slide Up)
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 600, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 600, useNativeDriver: true })
+    ]).start();
+  }, []);
 
   const filteredStatuses = statuses.filter((item) => {
     if (activeFilter !== 'all' && item.type !== activeFilter) return false;
@@ -39,42 +51,32 @@ export default function HomeScreen() {
     setTimeout(() => setIsRefreshing(false), 300);
   };
 
-  const imageCount = statuses.filter((s) => s.type === 'image').length;
-  const videoCount = statuses.filter((s) => s.type === 'video').length;
   const savedCount = savedStatuses.length;
-
   const totalBytes = savedStatuses.reduce((acc, curr) => acc + (curr.fileSizeBytes || 0), 0);
-  const storageText = totalBytes > 0 ? (totalBytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB' : '0 MB';
+  const storageText = totalBytes > 0 ? (totalBytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB' : '0.0 MB';
 
   const recentContacts = useMemo(() => {
     const contactMap = new Map();
     statuses.forEach(s => {
       if (!contactMap.has(s.sender)) {
-        contactMap.set(s.sender, { name: s.sender, count: 1, uri: s.uri });
+        contactMap.set(s.sender, { count: 1, uri: s.uri });
       } else {
         contactMap.get(s.sender).count += 1;
       }
     });
-    return Array.from(contactMap.values()).slice(0, 8);
+    return Array.from(contactMap.values()).slice(0, 8).map((c, i) => ({
+      ...c, name: DISPLAY_NAMES[i % DISPLAY_NAMES.length] // Assign stylish short name
+    }));
   }, [statuses]);
 
   return (
-    <ScreenContainer
-      scrollable
-      padded={false}
-      fadingEdgeLength={150}
-      refreshControl={
-        <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} colors={['#3DDC84']} tintColor={'#3DDC84'} />
-      }
-    >
-      <View style={styles.body}>
+    <ScreenContainer scrollable padded={false} refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} colors={['#3DDC84']} tintColor={'#3DDC84'} />}>
+      <Animated.View style={[styles.body, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
         
-        {/* REVERTED TO ORIGINAL HEADER */}
+        {/* HEADER */}
         <View style={styles.premiumHeader}>
           <View style={styles.headerLeft}>
-            <View style={{ marginRight: 10 }}>
-              <Logo size={42} />
-            </View>
+            <View style={{ marginRight: 10 }}><Logo size={42} /></View>
             <View>
               <View style={styles.brandRow}>
                 <Text style={styles.brandTitle}><Text style={{color: '#3DDC84'}}>W</Text> Status Saver</Text>
@@ -95,19 +97,8 @@ export default function HomeScreen() {
         {showSearch && (
           <View style={styles.searchBarContainer}>
             <Search size={18} color="#8D9F96" />
-            <TextInput
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder="Search statuses..."
-              placeholderTextColor="#8D9F96"
-              style={styles.searchInput}
-              autoFocus
-            />
-            {searchQuery ? (
-              <Pressable onPress={() => setSearchQuery('')}>
-                <X size={18} color="#8D9F96" />
-              </Pressable>
-            ) : null}
+            <TextInput value={searchQuery} onChangeText={setSearchQuery} placeholder="Search statuses..." placeholderTextColor="#8D9F96" style={styles.searchInput} autoFocus />
+            {searchQuery ? (<Pressable onPress={() => setSearchQuery('')}><X size={18} color="#8D9F96" /></Pressable>) : null}
           </View>
         )}
 
@@ -139,11 +130,9 @@ export default function HomeScreen() {
                 <View key={index} style={styles.contactItem}>
                   <View style={styles.contactAvatarWrap}>
                     <Image source={{ uri: contact.uri }} style={styles.contactAvatar} />
-                    <View style={styles.contactBadge}>
-                      <Text style={styles.contactBadgeText}>{contact.count}</Text>
-                    </View>
+                    <View style={styles.contactBadge}><Text style={styles.contactBadgeText}>{contact.count}</Text></View>
                   </View>
-                  <Text style={styles.contactName} numberOfLines={1}>{contact.name.split(' ')[0]}</Text>
+                  <Text style={styles.contactName} numberOfLines={1}>{contact.name}</Text>
                 </View>
               ))}
             </ScrollView>
@@ -159,12 +148,7 @@ export default function HomeScreen() {
             <Text style={styles.autoSaveTitle}>Auto-save is {autoSaveEnabled ? 'on' : 'off'}</Text>
             <Text style={styles.autoSaveSub}>New statuses are kept for 30 days automatically.</Text>
           </View>
-          <Switch
-            value={autoSaveEnabled}
-            onValueChange={setAutoSaveEnabled}
-            trackColor={{ false: '#1A2421', true: 'rgba(61, 220, 132, 0.4)' }}
-            thumbColor={autoSaveEnabled ? '#3DDC84' : '#8D9F96'}
-          />
+          <Switch value={autoSaveEnabled} onValueChange={setAutoSaveEnabled} trackColor={{ false: '#1A2421', true: 'rgba(61, 220, 132, 0.4)' }} thumbColor={autoSaveEnabled ? '#3DDC84' : '#8D9F96'} />
         </View>
 
         <View style={styles.newTodayHeader}>
@@ -180,9 +164,10 @@ export default function HomeScreen() {
           </View>
         ) : (
           <View style={styles.mediaGrid}>
-            {filteredStatuses.map((item) => {
+            {filteredStatuses.map((item, index) => {
               const isVideo = item.type === 'video' || item.uri.toLowerCase().endsWith('.mp4');
-              const sizeLabel = item.fileSizeBytes ? (item.fileSizeBytes / (1024 * 1024)).toFixed(1) + ' MB' : 'HD';
+              const sizeLabel = item.fileSizeBytes ? (item.fileSizeBytes / (1024 * 1024)).toFixed(1) + ' MB' : '0.1 MB';
+              const displayName = DISPLAY_NAMES[index % DISPLAY_NAMES.length];
 
               return (
                 <Pressable key={item.id} style={styles.mediaCard} onPress={() => setSelectedStatus(item)}>
@@ -209,7 +194,7 @@ export default function HomeScreen() {
                     <View style={styles.mediaBottomLeft}>
                       <View style={styles.miniAvatar}><Image source={{ uri: item.uri }} style={styles.miniAvatarImg} /></View>
                       <View>
-                        <Text style={styles.mediaSenderName} numberOfLines={1}>{item.sender}</Text>
+                        <Text style={styles.mediaSenderName} numberOfLines={1}>{displayName}</Text>
                         <Text style={styles.mediaTime}>{item.time}</Text>
                       </View>
                     </View>
@@ -220,7 +205,7 @@ export default function HomeScreen() {
             })}
           </View>
         )}
-      </View>
+      </Animated.View>
 
       <StatusViewerModal status={selectedStatus} visible={!!selectedStatus} onClose={() => setSelectedStatus(null)} onToggleSave={toggleSave} onToggleFavorite={toggleFavorite} />
     </ScreenContainer>

@@ -12,6 +12,8 @@ export function Logo({
   glow = false,
   showFreeBadge = false,
 }: LogoProps) {
+  const radius = size * 0.22;
+
   return (
     <View
       style={[
@@ -19,17 +21,19 @@ export function Logo({
         {
           width: size,
           height: size,
-          borderRadius: size / 2,
-        }
+          borderRadius: radius,
+          overflow: 'hidden',
+        },
+        glow && styles.glow,
       ]}
     >
       <Image
         source={require('@/assets/images/icon.png')}
         style={{
-          width: '100%',
-          height: '100%',
-          // Ye scale effect safed borders ko zoom karke crop kar dega
-          transform: [{ scale: 1.2 }],
+          width: '130%',
+          height: '130%',
+          marginLeft: '-15%',
+          marginTop: '-15%',
         }}
         resizeMode="cover"
       />
@@ -46,6 +50,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: 'transparent',
-    overflow: 'hidden', // Bahar nikla hua white hissa yahan se cut ho jayega
+  },
+
+  glow: {
+    shadowColor: '#3DDC84',
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    elevation: 4,
   },
 });
