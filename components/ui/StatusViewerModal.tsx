@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, Modal, Pressable, Share, StyleSheet, Text, View, Image, Alert, Dimensions } from 'react-native';
 import { Video, ResizeMode } from 'expo-av';
-import * as FileSystem from 'expo-file-system';
 import { X, Download, Check, Heart, Share2, Send, Play, Pause, Sparkles, ShieldCheck, Trash2 } from 'lucide-react-native';
 import { StatusMetadataItem } from '@/lib/statusService';
 import { useTheme } from '@/theme/ThemeProvider';
@@ -82,7 +81,6 @@ export const StatusViewerModal: React.FC<StatusViewerModalProps> = ({
 
   if (!status) return null;
 
-  // FIX: Identify video types correctly
   const isVideo = status.type === 'video' || status.uri.toLowerCase().endsWith('.mp4');
 
   return (
@@ -116,7 +114,6 @@ export const StatusViewerModal: React.FC<StatusViewerModalProps> = ({
           </View>
 
           <View style={styles.mediaContainer}>
-            {/* FIX: Video component added */}
             {isVideo ? (
               <Video
                 source={{ uri: status.uri }}
@@ -156,19 +153,13 @@ export const StatusViewerModal: React.FC<StatusViewerModalProps> = ({
           </View>
 
           <View style={styles.bottomBar}>
-            {/* FIX: Red Trash icon for saved statuses instead of green check */}
             {status.isSaved ? (
               <Pressable
-                onPress={async () => {
-                  try {
-                    const uriToDelete = status.savedUri || status.uri;
-                    await FileSystem.deleteAsync(uriToDelete);
-                    onToggleSave(status.id);
-                    showToast('Removed from Gallery');
-                    setTimeout(() => handleClose(), 300);
-                  } catch (e) {
-                    console.log('Delete cancelled');
-                  }
+                onPress={() => {
+                  // FIX: Direct internal toggleSave natively handles deletion without crashing
+                  onToggleSave(status.id);
+                  showToast('Removed from Gallery');
+                  setTimeout(() => handleClose(), 300);
                 }}
                 style={({ pressed }) => [
                   styles.actionBtn,

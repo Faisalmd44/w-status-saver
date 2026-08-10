@@ -20,8 +20,7 @@ export function Logo({
           width: size,
           height: size,
           borderRadius: size / 2,
-        },
-        glow && styles.glow,
+        }
       ]}
     >
       <Image
@@ -33,15 +32,6 @@ export function Logo({
         }}
         resizeMode="cover"
       />
-
-      {showFreeBadge && (
-        <View style={styles.freeBadge}>
-          <Image
-            source={require('@/assets/images/icon.png')}
-            style={{ width: 0, height: 0 }}
-          />
-        </View>
-      )}
     </View>
   );
 }
@@ -56,21 +46,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: 'transparent',
     overflow: 'hidden',
-  },
-  glow: {
-    shadowColor: '#3DDC84',
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 0 },
-    elevation: 8,
-  },
-  freeBadge: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: 18,
-    height: 18,
-    backgroundColor: '#E53935',
-    transform: [{ rotate: '45deg' }],
   },
 });
