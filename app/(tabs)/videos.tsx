@@ -7,7 +7,7 @@ import { Card } from '@/components/ui/Card';
 import { IconButton } from '@/components/ui/IconButton';
 import { StatusViewerModal } from '@/components/ui/StatusViewerModal';
 import { useTheme } from '@/theme/ThemeProvider';
-import { radius, spacing, typography } from '@/theme';
+import { spacing, typography } from '@/theme';
 import { useStatuses } from '@/hooks/useStatuses';
 import { StatusMetadataItem } from '@/lib/statusService';
 
@@ -16,35 +16,25 @@ export default function VideosScreen() {
   const { statuses, toggleSave, toggleFavorite } = useStatuses();
   const [selectedStatus, setSelectedStatus] = useState<StatusMetadataItem | null>(null);
 
-  // FIX: Added strict check for .mp4 files so all videos show up
   const videoStatuses = statuses.filter(
     (item) => item.type === 'video' || (item.uri && item.uri.toLowerCase().endsWith('.mp4'))
   );
 
   return (
-    <ScreenContainer scrollable padded={false}>
-      <AppBar
-        title="Video Statuses"
-        subtitle={`${videoStatuses.length} HD video clips available`}
-        centerTitle
-      />
+    <ScreenContainer scrollable padded={false} fadingEdgeLength={150}>
+      <AppBar title="Video Statuses" subtitle={`${videoStatuses.length} HD video clips available`} centerTitle />
       <View style={styles.body}>
         {videoStatuses.length === 0 ? (
           <Card style={styles.emptyCard}>
             <FolderSearch size={44} color="#3DDC84" />
             <Text style={styles.emptyTitle}>No Video Statuses</Text>
-            <Text style={styles.emptySubtitle}>
-              View video statuses in WhatsApp first, then tap Refresh.
-            </Text>
+            <Text style={styles.emptySubtitle}>View video statuses in WhatsApp first, then tap Refresh.</Text>
           </Card>
         ) : (
           <View style={styles.grid}>
             {videoStatuses.map((item) => (
               <Card key={item.id} padding="0" style={styles.gridCard}>
-                <Pressable
-                  onPress={() => setSelectedStatus(item)}
-                  style={styles.imageWrapper}
-                >
+                <Pressable onPress={() => setSelectedStatus(item)} style={styles.imageWrapper}>
                   <Image source={{ uri: item.uri }} style={styles.thumbnail} />
                   <View style={styles.videoOverlay}>
                     <View style={styles.playCircle}>
@@ -54,41 +44,18 @@ export default function VideosScreen() {
                       <Text style={styles.durationText}>{item.duration || '0:15'}</Text>
                     </View>
                   </View>
-                  <Pressable
-                    onPress={() => toggleFavorite(item.id)}
-                    style={styles.favButton}
-                  >
-                    <Heart
-                      size={16}
-                      color={item.isFavorite ? colors.destructive : '#FFFFFF'}
-                      fill={item.isFavorite ? colors.destructive : 'rgba(0,0,0,0.3)'}
-                    />
+                  <Pressable onPress={() => toggleFavorite(item.id)} style={styles.favButton}>
+                    <Heart size={16} color={item.isFavorite ? colors.destructive : '#FFFFFF'} fill={item.isFavorite ? colors.destructive : 'rgba(0,0,0,0.3)'} />
                   </Pressable>
                 </Pressable>
 
                 <View style={styles.cardInfo}>
                   <View style={{ flex: 1 }}>
-                    <Text
-                      style={[typography.labelMedium, { color: colors.foreground }]}
-                      numberOfLines={1}
-                    >
-                      {item.sender}
-                    </Text>
-                    <Text style={[typography.caption, { color: colors.mutedForeground }]}>
-                      {item.time}
-                    </Text>
+                    <Text style={[typography.labelMedium, { color: colors.foreground }]} numberOfLines={1}>{item.sender}</Text>
+                    <Text style={[typography.caption, { color: colors.mutedForeground }]}>{item.time}</Text>
                   </View>
-                  <IconButton
-                    label="Save"
-                    onPress={() => toggleSave(item.id)}
-                    active={item.isSaved}
-                    size={34}
-                  >
-                    {item.isSaved ? (
-                      <Check size={16} color={colors.primaryForeground} />
-                    ) : (
-                      <Download size={16} color={colors.foreground} />
-                    )}
+                  <IconButton label="Save" onPress={() => toggleSave(item.id)} active={item.isSaved} size={34}>
+                    {item.isSaved ? <Check size={16} color={colors.primaryForeground} /> : <Download size={16} color={colors.foreground} />}
                   </IconButton>
                 </View>
               </Card>
@@ -96,14 +63,7 @@ export default function VideosScreen() {
           </View>
         )}
       </View>
-
-      <StatusViewerModal
-        status={selectedStatus}
-        visible={!!selectedStatus}
-        onClose={() => setSelectedStatus(null)}
-        onToggleSave={toggleSave}
-        onToggleFavorite={toggleFavorite}
-      />
+      <StatusViewerModal status={selectedStatus} visible={!!selectedStatus} onClose={() => setSelectedStatus(null)} onToggleSave={toggleSave} onToggleFavorite={toggleFavorite} />
     </ScreenContainer>
   );
 }
